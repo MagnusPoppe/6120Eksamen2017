@@ -17,14 +17,14 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="@android:style/TextAppearance.Material.Headline"
                     android:textSize="24sp"
-                    android:text="215.123.12.124"
-                    android:id="@+id/visit_list_ip"/>
+                    android:text="GYGRESTOLEN"
+                    android:id="@+id/destination_name"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="@android:style/TextAppearance.Material.Body1"
-                    android:text="GoogleBot"
-                    android:id="@+id/visit_list_org"/>
+                    android:text="FJELLTOPP"
+                    android:id="@+id/destination_type"/>
             </LinearLayout>
             <LinearLayout
                 android:orientation="vertical"
@@ -34,14 +34,14 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="@android:style/TextAppearance.Material.Body1"
                     android:textAlignment="viewEnd"
-                    android:text="Last Visit:"/>
+                    android:id="@+id/destination_moh"
+                    android:text="9481m"/>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAppearance="@android:style/TextAppearance.Material.Body1"
                     android:textAlignment="viewEnd"
-                    android:text="today, kl. 21:30"
-                    android:id="@+id/visit_list_date"/>
+                    android:text="M.O.H."/>
             </LinearLayout>
         </TableRow>
     </TableLayout>

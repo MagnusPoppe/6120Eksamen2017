@@ -13,6 +13,11 @@ import android.support.v4.app.ActivityCompat;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
+import no.byteme.magnuspoppe.eksamen.datamodel.Destination;
+
 public class ActivityMain extends Activity
 {
 
@@ -25,6 +30,8 @@ public class ActivityMain extends Activity
     private LatLng devicePosition;
     FragmentMap map;
 
+    private ArrayList<Destination> destinations;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -33,6 +40,20 @@ public class ActivityMain extends Activity
 
         devicePosition = HØYSKOLEN;
         displayMap();
+    }
+
+    private void fillLocationsList()
+    {
+        // TODO: Database integration
+        destinations = new ArrayList<>();
+        destinations.add(new Destination("Gygrestolen","Utsiktspunkt", 490, 59.3660128, 8.9787209));
+        destinations.add(new Destination("Åsen","Husmannsplass", 355, 59.3921606, 9.1061648));
+        destinations.add(new Destination("Gygrestolen","Utsiktspunkt", 490, 59.3660128, 8.9787209));
+        destinations.add(new Destination("Åsen","Husmannsplass", 355, 59.3921606, 9.1061648));
+        destinations.add(new Destination("Gygrestolen","Utsiktspunkt", 490, 59.3660128, 8.9787209));
+        destinations.add(new Destination("Åsen","Husmannsplass", 355, 59.3921606, 9.1061648));
+        destinations.add(new Destination("Gygrestolen","Utsiktspunkt", 490, 59.3660128, 8.9787209));
+        destinations.add(new Destination("Åsen","Husmannsplass", 355, 59.3921606, 9.1061648));
     }
 
     /**
@@ -76,5 +97,10 @@ public class ActivityMain extends Activity
     public LatLng getDevicePosition()
     {
         return devicePosition;
+    }
+
+    public ArrayList<Destination> getDestinations()
+    {
+        return destinations;
     }
 }
