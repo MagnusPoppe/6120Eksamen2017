@@ -7,11 +7,25 @@
     tools:context="no.byteme.magnuspoppe.eksamen.ActivityMain">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/mapFragmentContainer">
+        android:orientation="vertical">
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/flat"
+            android:layout_weight=".6"
+            android:id="@+id/mapFragmentContainer">
 
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight=".4"
+            android:orientation="vertical"
+            android:id="@+id/locationsListFragmentContainer">
+
+        </LinearLayout>
     </LinearLayout>
-
 </android.support.constraint.ConstraintLayout>

@@ -41,7 +41,7 @@ public class AdapterCloseLocations extends BaseAdapter
 
     public View getView(int position, View view, ViewGroup parent)
     {
-        // Initializing the view element:
+        // Initializing the layout element:
         DestinationView list;
         if (view == null) // Only runs for the first object.
         {

@@ -1,20 +1,16 @@
 package no.byteme.magnuspoppe.eksamen;
 
-import android.Manifest;
+import android.animation.LayoutTransition;
 import android.app.Activity;
 import android.app.FragmentTransaction;
-import android.content.Context;
-import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
+import android.widget.LinearLayout;
 
 import com.google.android.gms.maps.model.LatLng;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import no.byteme.magnuspoppe.eksamen.datamodel.Destination;
 
@@ -22,13 +18,16 @@ public class ActivityMain extends Activity
 {
 
     private static final LatLng HØYSKOLEN = new LatLng(59.408852, 9.059512);
-    private static final LatLng GYGRESTOLEN = new LatLng(59.367091, 8.976251);
 
     public static final String MAIN_LAT = "kldaføjsefølakjdf";
     public static final String MAIN_LNG = "asløkdsalskdjfkal";
 
     private LatLng devicePosition;
     FragmentMap map;
+    FragmentCloseLocationList closeLocationList;
+
+    LinearLayout bottomPanel;
+    LinearLayout mapPanel;
 
     private ArrayList<Destination> destinations;
 
@@ -38,22 +37,109 @@ public class ActivityMain extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        AsyncDestination async = new AsyncDestination(this);
+        async.get();
+
+        destinations = new ArrayList<>();
+
         devicePosition = HØYSKOLEN;
         displayMap();
+        displayLocationList();
+
+        bottomPanel = (LinearLayout) findViewById(R.id.locationsListFragmentContainer);
+        mapPanel = (LinearLayout) findViewById(R.id.mapFragmentContainer);
+        LayoutTransition transition = new LayoutTransition();
+        transition.enableTransitionType(LayoutTransition.CHANGING);
+        transition.disableTransitionType(LayoutTransition.APPEARING);
+        transition.disableTransitionType(LayoutTransition.DISAPPEARING);
+        transition.disableTransitionType(LayoutTransition.CHANGE_APPEARING);
+        transition.disableTransitionType(LayoutTransition.CHANGE_DISAPPEARING);
+        transition.setDuration(400);
+        bottomPanel.setLayoutTransition(transition);
+        mapPanel.setLayoutTransition(transition);
     }
 
-    private void fillLocationsList()
+    /**
+     * Flytter kameraet til en posisjon.
+     * @param position å flytte til.
+     */
+    public void panMapTo(LatLng position)
     {
-        // TODO: Database integration
-        destinations = new ArrayList<>();
-        destinations.add(new Destination("Gygrestolen","Utsiktspunkt", 490, 59.3660128, 8.9787209));
-        destinations.add(new Destination("Åsen","Husmannsplass", 355, 59.3921606, 9.1061648));
-        destinations.add(new Destination("Gygrestolen","Utsiktspunkt", 490, 59.3660128, 8.9787209));
-        destinations.add(new Destination("Åsen","Husmannsplass", 355, 59.3921606, 9.1061648));
-        destinations.add(new Destination("Gygrestolen","Utsiktspunkt", 490, 59.3660128, 8.9787209));
-        destinations.add(new Destination("Åsen","Husmannsplass", 355, 59.3921606, 9.1061648));
-        destinations.add(new Destination("Gygrestolen","Utsiktspunkt", 490, 59.3660128, 8.9787209));
-        destinations.add(new Destination("Åsen","Husmannsplass", 355, 59.3921606, 9.1061648));
+        map.panTo(position);
+    }
+
+    /**
+     * Flytter kameraet til en posisjon og setter en markør i posisjonen.
+     * @param title tekst på markøren
+     * @param position posisjonen alt skal skje på.
+     */
+    public void panAndMarkMap(String title, LatLng position)
+    {
+        map.panTo(position);
+        map.markMap(title, position);
+    }
+
+    /**
+     * Endrer vektingen av de to panelene vist. Disse skal være fokusert på der det er mest
+     * viktig informasjon.
+     * @param weight Vektingen som skal settes på bunn-panelet.
+     */
+    public void resizeBottomPanel(float weight)
+    {
+
+
+        LinearLayout.LayoutParams panelParams = (LinearLayout.LayoutParams) bottomPanel.getLayoutParams();
+        panelParams.weight = weight;
+        bottomPanel.setLayoutParams(panelParams);
+        //Animation ani = new AnimateWeightChange(bottomPanel, panelParams.weight, weight);
+        //ani.setDuration(1000);
+
+
+
+
+        LinearLayout.LayoutParams mapParams = (LinearLayout.LayoutParams) mapPanel.getLayoutParams();
+        mapParams.weight = 1-weight;
+        mapPanel.setLayoutParams(mapParams);
+        //Animation ani2 = new AnimateWeightChange(bottomPanel, mapParams.weight, 1-weight);
+        //ani2.setDuration(1000);
+
+        //bottomPanel.startAnimation(ani);
+        // mapPanel.startAnimation(ani2);
+    }
+
+    /**
+     * Initialiserer lokasjonsliste fragmentet.
+     */
+    private void displayLocationList()
+    {
+        // Plasserer ut listen:
+        closeLocationList = new FragmentCloseLocationList();
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        transaction.replace(R.id.locationsListFragmentContainer, closeLocationList);
+        //transaction.addToBackStack(null);
+
+        // Utfører transaksjonen.
+        transaction.commit();
+    }
+
+    /**
+     * Initialiserer detaljertInfo fragmentet.
+     */
+    public void displayDetailedInformation(int destinationIndex)
+    {
+        // Plasserer ut listen:
+        FragmentDetailedInfo detailedInfo = new FragmentDetailedInfo();
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        transaction.replace(R.id.locationsListFragmentContainer, detailedInfo);
+        transaction.addToBackStack(null);
+
+        // Legger ved hvilken destinasjon som ble valgt.
+        Bundle args = new Bundle();
+        args.putInt("SELECTED_DESTINATION", destinationIndex);
+        detailedInfo.setArguments(args);
+
+        // Utfører transaksjonen.
+        transaction.commit();
     }
 
     /**
@@ -99,8 +185,57 @@ public class ActivityMain extends Activity
         return devicePosition;
     }
 
+    /**
+     * @return destinasjonsobjektet
+     */
     public ArrayList<Destination> getDestinations()
     {
         return destinations;
     }
+
+    /**
+     * Setter destinasjonsobjektet og sorterer det etter enhetens posisjon.
+     * @param destinations
+     */
+    public void setDestinations(ArrayList<Destination> destinations)
+    {
+        this.destinations = destinations;
+        sortAllDestinations();
+
+        if (closeLocationList != null)
+            closeLocationList.updateView();
+    }
+
+    /**
+     * Sorterer alle destinasjoner etter avstand fra bruker. Nærmeste først. (devicePosition)
+     */
+    public void sortAllDestinations()
+    {
+        // Lager ny tabell for å sortere i.
+        Destination[] sortable = new Destination[destinations.size()];
+        int i = 0;
+
+        // Løper igjennom alle objekter og oppdaterer avstand fra enheten:
+        for( Destination destination : destinations )
+        {
+            float[] results = new float[10];
+            Location.distanceBetween(
+                    devicePosition.latitude, devicePosition.longitude,
+                    destination.getCoordinates().latitude, destination.getCoordinates().longitude,
+                    results
+            );
+
+            destination.setDistanceFromDevice(results[0]);
+            sortable[i++] = destination; // Legger til elemeneter inn i en sorterbar tabell
+        }
+
+        // Sorterer tabellen:
+        Arrays.sort(sortable);
+
+        // Oppdaterer arraylist for visning:
+        destinations.clear();
+        for( Destination destination : sortable )
+            destinations.add(destination);
+    }
+
 }

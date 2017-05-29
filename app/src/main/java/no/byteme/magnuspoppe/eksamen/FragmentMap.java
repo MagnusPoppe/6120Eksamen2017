@@ -12,6 +12,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 /**
  * Dette fragmentet inneholder kartet som vises på
@@ -50,12 +51,26 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
     }
 
     /**
-     * Flytter kartets "view" til oppgitte koordinater med fancy animasjon.
+     * Flytter kartets "layout" til oppgitte koordinater med fancy animasjon.
      * @param to koordinater å flytte til.
      */
     public void panTo(LatLng to)
     {
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(to, DEFAULT_ZOOM));
+    }
+
+    /**
+     * Markerer kartet med standard google maps markør.
+     * @param title Tittelen på markøren
+     * @param position posisjonen markøren skal plasseres på
+     */
+    public void markMap(String title, LatLng position)
+    {
+        map.addMarker(new MarkerOptions()
+                .position(position)
+                .draggable(false)
+                .title(title)
+        );
     }
 
     @Override

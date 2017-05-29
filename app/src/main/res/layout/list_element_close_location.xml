@@ -8,15 +8,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:stretchColumns="0,1"
-        android:padding="20sp">
+        android:padding="16sp">
         <TableRow>
             <LinearLayout
                 android:orientation="vertical">
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="@android:style/TextAppearance.Material.Headline"
-                    android:textSize="24sp"
+                    android:textAppearance="@android:style/TextAppearance.Material.Body2"
+                    android:textSize="16sp"
                     android:text="GYGRESTOLEN"
                     android:id="@+id/destination_name"/>
                 <TextView
