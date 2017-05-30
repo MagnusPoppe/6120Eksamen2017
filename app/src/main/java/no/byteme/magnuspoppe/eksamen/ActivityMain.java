@@ -1,12 +1,19 @@
 package no.byteme.magnuspoppe.eksamen;
 
+import android.Manifest;
 import android.animation.LayoutTransition;
 import android.app.Activity;
 import android.app.FragmentTransaction;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.widget.LinearLayout;
 
+import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
@@ -16,7 +23,6 @@ import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
 
 public class ActivityMain extends Activity
 {
-
     private static final LatLng HØYSKOLEN = new LatLng(59.408852, 9.059512);
 
     public static final String HOVED_LATITIUDE = "kldaføjsefølakjdf";
@@ -59,7 +65,43 @@ public class ActivityMain extends Activity
         overgang.setDuration(400);
         bunnPanel.setLayoutTransition(overgang);
         kartPanel.setLayoutTransition(overgang);
+
+        LocationManager lokasjonsstyrer = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        LocationListener lokasjonslytter = new LocationListener()
+        {
+            @Override
+            public void onLocationChanged(Location location)
+            {
+                setEnhetensPosisjon(new LatLng(location.getLatitude(), location.getLongitude()));
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+            @Override
+            public void onProviderEnabled(String provider) {}
+
+            @Override
+            public void onProviderDisabled(String provider) {}
+        };
+        if (ActivityCompat.checkSelfPermission(this,
+            Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+            && ActivityCompat.checkSelfPermission(this,
+            Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        )
+        {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        lokasjonsstyrer.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, lokasjonslytter);
     }
+
 
     /**
      * Flytter kameraet til en posisjon.
@@ -188,6 +230,15 @@ public class ActivityMain extends Activity
     }
 
     /**
+     * @param posisjon setter ny posisjon for enhet.
+     */
+    private void setEnhetensPosisjon(LatLng posisjon)
+    {
+        this.enhetensPosisjon = posisjon;
+        sorterDestinasjoner();
+    }
+
+    /**
      * Setter destinasjonsobjektet og sorterer det etter enhetens posisjon.
      * @param destinasjoner
      */
@@ -196,15 +247,14 @@ public class ActivityMain extends Activity
         // Setter og sorterer ny tabell:
         this.destinasjoner = destinasjoner;
         sorterDestinasjoner();
-
-        // Oppdaterer view
-        if (destinasjonsliste != null)
-            destinasjonsliste.oppdaterListen();
     }
 
     /**
      * Sorterer alle destinasjoner etter avstand fra bruker. Nærmeste først.
-     * (bruker enhetens Posisjon)
+     * (bruker enhetens Posisjon).
+     *
+     * Denne metoden kalles på enten når enhetens lokasjon har endret seg,
+     * eller når destinasjonslisten har endret seg.
      */
     public void sorterDestinasjoner()
     {
@@ -233,6 +283,10 @@ public class ActivityMain extends Activity
         destinasjoner.clear();
         for( Destinasjon destinasjon : sorterbar )
             destinasjoner.add(destinasjon);
+
+        // Oppdaterer view
+        if (destinasjonsliste != null)
+            destinasjonsliste.oppdaterListen();
     }
 
 }

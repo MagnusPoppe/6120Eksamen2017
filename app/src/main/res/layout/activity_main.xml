@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -14,18 +14,18 @@
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="@dimen/flat"
-            android:layout_weight=".6"
+            android:layout_weight="@dimen/smallPanel"
             android:id="@+id/mapFragmentContainer">
 
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight=".4"
+            android:layout_height="@dimen/flat"
+            android:layout_weight="@dimen/smallPanel"
             android:orientation="vertical"
             android:id="@+id/locationsListFragmentContainer">
 
         </LinearLayout>
     </LinearLayout>
-</android.support.constraint.ConstraintLayout>
+</FrameLayout>

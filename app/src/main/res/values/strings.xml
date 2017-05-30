@@ -6,4 +6,6 @@
 
     <string name="error">Noe gikk galt!</string>
     <string name="imageError">Det skjedde en feil da bildet ble lastet inn.</string>
+    <string name="markedBy">Markert av:</string>
+    <string name="metersAboveSeaLevel">M.O.H.</string>
 </resources>

@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:stretchColumns="0,1"
-        android:padding="16sp">
+        android:padding="@dimen/defaultPadding">
         <TableRow>
             <LinearLayout
                 android:orientation="vertical">
@@ -16,14 +16,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="@android:style/TextAppearance.Material.Body2"
-                    android:textSize="16sp"
-                    android:text="GYGRESTOLEN"
+                    android:textSize="@dimen/largeText"
                     android:id="@+id/destination_name"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textAppearance="@android:style/TextAppearance.Material.Body1"
-                    android:text="FJELLTOPP"
                     android:id="@+id/destination_type"/>
             </LinearLayout>
             <LinearLayout
@@ -34,14 +32,13 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="@android:style/TextAppearance.Material.Body1"
                     android:textAlignment="viewEnd"
-                    android:id="@+id/destination_moh"
-                    android:text="9481m"/>
+                    android:id="@+id/destination_moh"/>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textAppearance="@android:style/TextAppearance.Material.Body1"
                     android:textAlignment="viewEnd"
-                    android:text="M.O.H."/>
+                    android:text="@string/metersAboveSeaLevel"/>
             </LinearLayout>
         </TableRow>
     </TableLayout>

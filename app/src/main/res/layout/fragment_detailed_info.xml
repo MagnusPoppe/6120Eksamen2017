@@ -6,7 +6,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="16sp"
+        android:padding="@dimen/defaultPadding"
         android:orientation="vertical">
 
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -65,7 +65,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/detalj_bilde"
-            android:elevation="6dp"
+            android:elevation="@dimen/foregroundElevation"
             />
 
         <TextView
@@ -82,7 +82,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="@android:style/TextAppearance.Material.Body1"
-                android:text="Markert av: "/>
+                android:text="@string/markedBy"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

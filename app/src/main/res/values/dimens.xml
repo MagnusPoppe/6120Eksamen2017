@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="flat">0dp</dimen>
+    <dimen name="defaultPadding">16sp</dimen>
+    <dimen name="largeText">16sp</dimen>
+    <dimen name="foregroundElevation">6dp</dimen>
+    <dimen name="backgroundElevation">2sp</dimen>
 </resources>

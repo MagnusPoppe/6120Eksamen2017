@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Vekting ble plassert i egen ressursfil fordi en vanlig dimens
+    fil krever måleenhet (dp, sp, pt, px, mm, in) bak tallet. Dette
+    brukes ikke med "weight" attributten.
+-->
+<resources>
+    <item type="dimen" format="float" name="smallPanel">0.40</item>
+    <item type="dimen" format="float" name="largePanel">0.60</item>
+</resources>
