@@ -29,7 +29,14 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
     // Kartobjeketet for operasjoner mot kartet.
     GoogleMap googleKart;
 
-    final static private int STANDARD_ZOOM = 14;
+    final static private int STANDARD_ZOOM = 18;
+
+    public boolean isBrukerEnhetPosisjon()
+    {
+        return brukerEnhetPosisjon;
+    }
+
+    boolean brukerEnhetPosisjon;
 
     public FragmentMap()
     {
@@ -51,11 +58,22 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
     public void onMapReady(GoogleMap map)
     {
         // Lagrer og velger utseende:
-        this.googleKart = map;
         map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-
+        map.getUiSettings().setMyLocationButtonEnabled(true);
+        map.getUiSettings().setMapToolbarEnabled(true);
+        this.googleKart = map;
         // Flytter kamera til rikitg initiell posisjon
-        flyttKameraTil(koordinat);
+        googleKart.animateCamera(CameraUpdateFactory.newLatLngZoom(koordinat, STANDARD_ZOOM));
+    }
+
+    /**
+     * Flytter kartets "layout" til oppgitte koordinater med fancy animasjon.
+     * @param nyPosisjon koordinater å flytte til.
+     */
+    public void oppdaterBrukerPosisjon(LatLng nyPosisjon)
+    {
+        brukerEnhetPosisjon = true;
+        googleKart.animateCamera(CameraUpdateFactory.newLatLngZoom(nyPosisjon, STANDARD_ZOOM));
     }
 
     /**
@@ -64,6 +82,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
      */
     public void flyttKameraTil(LatLng til)
     {
+        brukerEnhetPosisjon = false;
         googleKart.animateCamera(CameraUpdateFactory.newLatLngZoom(til, STANDARD_ZOOM));
     }
 
@@ -96,10 +115,12 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
                     argumenter.getDouble(ActivityMain.HOVED_LATITIUDE),
                     argumenter.getDouble(ActivityMain.HOVED_LONGITUDE)
             );
+            brukerEnhetPosisjon = false;
         }
         else
         {
             // Hvis ikke kordinater finnes, skal enhetens posisjon hentes ut.
+            brukerEnhetPosisjon = true;
             ActivityMain aktivitet = (ActivityMain) getActivity();
             koordinat = aktivitet.getEnhetensPosisjon();
         }

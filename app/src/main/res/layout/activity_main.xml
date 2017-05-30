@@ -1,31 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+<android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="no.byteme.magnuspoppe.eksamen.ActivityMain">
-
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="no.byteme.magnuspoppe.eksamen.ActivityMain"
+    android:background="@android:color/background_dark"
+    >
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:visibility="visible"
+        android:id="@+id/mainFragmentContainer"
+        android:background="@android:color/background_light"
+        >
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="@dimen/flat"
-            android:layout_weight="@dimen/smallPanel"
-            android:id="@+id/mapFragmentContainer">
-
-        </LinearLayout>
-
+            android:layout_weight="@dimen/largePanel"
+            android:id="@+id/mapFragmentContainer"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="@dimen/flat"
             android:layout_weight="@dimen/smallPanel"
             android:orientation="vertical"
-            android:id="@+id/locationsListFragmentContainer">
-
-        </LinearLayout>
+            android:id="@+id/locationsListFragmentContainer"/>
     </LinearLayout>
-</FrameLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/minLokasjon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            app:fabSize="mini"
+            android:backgroundTint="@android:color/background_light"
+            app:borderWidth="0dp"
+            android:src="@drawable/ic_my_location"
+            android:layout_margin="@dimen/defaultPadding"
+            android:onClick="gåTilLokasjon"/>
+
+        <android.support.design.widget.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_margin="@dimen/defaultPadding"
+            android:src="@mipmap/ic_add"
+            android:id="@+id/leggTil"
+            android:onClick="leggTilLokasjon"/>
+    </RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

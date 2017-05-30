@@ -1,11 +1,16 @@
 <resources>
-    <string name="app_name">Eksamen</string>
+    <string name="app_name">Turmål app</string>
+
+    <!-- Feilmeldinger: -->
+    <string name="error">Noe gikk galt!</string>
+    <string name="imageError">Det skjedde en feil da bildet ble lastet inn.</string>
+
+    <!-- Diverse strenger brukt for forklaring av tekst -->
+    <string name="markedBy">Markert av:</string>
+    <string name="metersAboveSeaLevel">M.O.H.</string>
+    <string name="perimissionDialog">Åpne tillateses dialog</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
-    <string name="error">Noe gikk galt!</string>
-    <string name="imageError">Det skjedde en feil da bildet ble lastet inn.</string>
-    <string name="markedBy">Markert av:</string>
-    <string name="metersAboveSeaLevel">M.O.H.</string>
 </resources>

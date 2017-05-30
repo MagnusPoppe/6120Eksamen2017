@@ -45,6 +45,7 @@ public class FragmentCloseLocationList extends Fragment
         super.onResume();
         ActivityMain aktivitet = (ActivityMain) getActivity();
         aktivitet.skalerPanelVekting(0.4f);
+        aktivitet.getLeggTilKnapp().setVisibility(View.VISIBLE);
     }
 
     @Override

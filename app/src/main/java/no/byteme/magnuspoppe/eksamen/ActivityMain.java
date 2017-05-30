@@ -4,17 +4,22 @@ import android.Manifest;
 import android.animation.LayoutTransition;
 import android.app.Activity;
 import android.app.FragmentTransaction;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.view.View;
 import android.widget.LinearLayout;
 
-import com.google.android.gms.maps.LocationSource;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.model.LatLng;
+
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,19 +27,28 @@ import java.util.Arrays;
 import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
 
 public class ActivityMain extends Activity
+        implements GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener
 {
-    private static final LatLng HØYSKOLEN = new LatLng(59.408852, 9.059512);
+    private static final LatLng HOYSKOLEN = new LatLng(59.408852, 9.059512);
 
     public static final String HOVED_LATITIUDE = "kldaføjsefølakjdf";
     public static final String HOVED_LONGITUDE = "asløkdsalskdjfkal";
+    private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 978123;
+    private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 987122;
+
+    private Location lokasjon = null;
+    // Klient som kommuniserer med Google Play API
+    private GoogleApiClient mGoogleApiClient = null;
 
     private LatLng enhetensPosisjon;
-    FragmentMap kart;
-    FragmentCloseLocationList destinasjonsliste;
+    private FragmentMap kart;
+    private FragmentCloseLocationList destinasjonsliste;
 
-    LinearLayout bunnPanel;
-    LinearLayout kartPanel;
+    private LinearLayout bunnPanel;
+    private LinearLayout kartPanel;
 
+    private FloatingActionButton leggTilKnapp;
     private ArrayList<Destinasjon> destinasjoner;
 
     @Override
@@ -43,15 +57,21 @@ public class ActivityMain extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        leggTilKnapp = (FloatingActionButton) findViewById(R.id.leggTil);
+
         // Henter ut destinasjonsdata asynkront:
         destinasjoner = new ArrayList<>();
         AsynkronDestinasjon oppgave = new AsynkronDestinasjon(this);
         oppgave.get();
 
-        // Lager kart og listepanel:
-        enhetensPosisjon = HØYSKOLEN;
-        visKart();
-        visDestinasjonsListe();
+        // Create an instance of GoogleAPIClient.
+        if (mGoogleApiClient == null) {
+            GoogleApiClient.Builder apiBuilder = new GoogleApiClient.Builder(this);
+            apiBuilder.addConnectionCallbacks(this);        /* ConnectionCallbacks-objekt */
+            apiBuilder.addOnConnectionFailedListener(this); /* OnConnectionFailedListener-objekt */
+            apiBuilder.addApi(LocationServices.API);        /* Velg Play Service API */
+            mGoogleApiClient = apiBuilder.build();
+        }
 
         // Setter animasjon på panelene:
         bunnPanel = (LinearLayout) findViewById(R.id.locationsListFragmentContainer);
@@ -66,42 +86,25 @@ public class ActivityMain extends Activity
         bunnPanel.setLayoutTransition(overgang);
         kartPanel.setLayoutTransition(overgang);
 
-        LocationManager lokasjonsstyrer = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        LocationListener lokasjonslytter = new LocationListener()
-        {
-            @Override
-            public void onLocationChanged(Location location)
-            {
-                setEnhetensPosisjon(new LatLng(location.getLatitude(), location.getLongitude()));
-            }
-
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-            @Override
-            public void onProviderEnabled(String provider) {}
-
-            @Override
-            public void onProviderDisabled(String provider) {}
-        };
-        if (ActivityCompat.checkSelfPermission(this,
-            Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-            && ActivityCompat.checkSelfPermission(this,
-            Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-        )
-        {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        lokasjonsstyrer.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, lokasjonslytter);
+        // Lager kart og listepanel:
+        enhetensPosisjon = null;
+        visKart();
+        visDestinasjonsListe();
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Connect the ApiClient to Google Services
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        // Disconnect the ApiClient
+        mGoogleApiClient.disconnect();
+        super.onStop();
+    }
 
     /**
      * Flytter kameraet til en posisjon.
@@ -178,6 +181,26 @@ public class ActivityMain extends Activity
         transaksjon.commit();
     }
 
+
+    private void visLeggTilLokasjon()
+    {
+        // Plasserer ut listen:
+        FragmentAddLocation leggTil = new FragmentAddLocation();
+        FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
+        transaksjon.replace(R.id.locationsListFragmentContainer, leggTil);
+        transaksjon.addToBackStack(null);
+
+        // Legger ved hvilken destinasjon som ble valgt.
+        Bundle argumenter = new Bundle();
+        argumenter.putDouble("MOH", lokasjon.getAltitude());
+        argumenter.putDouble("LAT", lokasjon.getLatitude());
+        argumenter.putDouble("LNG", lokasjon.getLongitude());
+        leggTil.setArguments(argumenter);
+
+        // Utfører transaksjonen.
+        transaksjon.commit();
+    }
+
     /**
      * Viser kartet uten parametere. Dette vil gjøre at
      * kartfragmentet (FragmentMap) vil gjøre sin standard
@@ -198,7 +221,6 @@ public class ActivityMain extends Activity
         kart = new FragmentMap();
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
         transaksjon.replace(R.id.mapFragmentContainer, kart);
-        transaksjon.addToBackStack(null);
 
         // Legger ved koordinater som skal vises i kartet:
         if (koordinater != null)
@@ -218,7 +240,10 @@ public class ActivityMain extends Activity
      */
     public LatLng getEnhetensPosisjon()
     {
-        return enhetensPosisjon;
+        if (enhetensPosisjon != null)
+            return enhetensPosisjon;
+        else
+            return HOYSKOLEN;
     }
 
     /**
@@ -236,6 +261,10 @@ public class ActivityMain extends Activity
     {
         this.enhetensPosisjon = posisjon;
         sorterDestinasjoner();
+
+
+        if (kart.isBrukerEnhetPosisjon())
+            kart.oppdaterBrukerPosisjon(posisjon);
     }
 
     /**
@@ -267,7 +296,7 @@ public class ActivityMain extends Activity
         {
             float[] resultater = new float[10];
             Location.distanceBetween(
-                    enhetensPosisjon.latitude, enhetensPosisjon.longitude,
+                    getEnhetensPosisjon().latitude, getEnhetensPosisjon().longitude,
                     destinasjon.getKoordinat().latitude, destinasjon.getKoordinat().longitude,
                     resultater
             );
@@ -288,5 +317,105 @@ public class ActivityMain extends Activity
         if (destinasjonsliste != null)
             destinasjonsliste.oppdaterListen();
     }
+
+    /**
+     * "Eventhandeler" for min lokasjon knappen. Flytter kartet til min
+     * lokasjon.
+     * @param view
+     */
+    public void gåTilLokasjon(View view)
+    {
+        kart.oppdaterBrukerPosisjon(getEnhetensPosisjon());
+    }
+
+    /**
+     * "Eventhandeler" for legg til knapp.
+     * @param view
+     */
+    public void leggTilLokasjon(View view)
+    {
+        FloatingActionButton fab = (FloatingActionButton)view;
+        fab.setVisibility(View.GONE);
+
+        skalerPanelVekting(0.8f);
+
+        visLeggTilLokasjon();
+    }
+
+    public FloatingActionButton getLeggTilKnapp()
+    {
+        return leggTilKnapp;
+    }
+
+    //---------------------------------------------
+    //  FØLGENDE ER KOPI FRA LEKSJON 12B.
+    //  Modifisert for å passe applikasjonen.
+    //---------------------------------------------
+
+    public final static int REQUEST_LOCATION = 1;
+
+    /**
+     * Utføres når oppkobling skjer.
+     * Direkte kopi fra leksjon 12b.
+     */
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
+        } else {
+            // OK: Appen har tillatelsen ACCESS_FINE_LOCATION. Finn siste posisjon
+            Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            if (lastLocation != null)
+                this.setEnhetensPosisjon(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
+        }
+    }
+
+    /**
+     * Utføres når koblingen feiler
+     * Direkte kopi fra leksjon 12b.
+     */
+    @Override
+    public void onConnectionFailed(ConnectionResult result) {
+        // An unresolvable error has occurred and a connection to Google APIs
+        // could not be established. Display an error message, or handle the failure silently
+        if (getCurrentFocus() != null)
+            Snackbar.make(getCurrentFocus(),
+                    "Klarte ikke å koble til Google Play Services", Snackbar.LENGTH_LONG).show();
+    }
+
+    /**
+     * Utføres når koblingen blir utsatt
+     * Direkte kopi fra leksjon 12b.
+     */
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    /**
+     * Callbackmetode som kalles etter at bruker har svart på spørsmål om rettigheter
+     * Direkte kopi fra leksjon 12b.
+     */
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == REQUEST_LOCATION) {
+            if(grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                try {
+                    lokasjon = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                    if (lokasjon != null)
+                        this.setEnhetensPosisjon(new LatLng(lokasjon.getLatitude(), lokasjon.getLongitude()));
+                }
+                catch (SecurityException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                // Permission was denied or request was cancelled
+                Snackbar.make(getCurrentFocus(),
+                        "Kan ikke vise posisjon uten tillatelse", Snackbar.LENGTH_LONG).show();
+            }
+        }
+    }
+
 
 }
