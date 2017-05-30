@@ -12,24 +12,24 @@ import com.google.android.gms.maps.model.LatLng;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import no.byteme.magnuspoppe.eksamen.datamodel.Destination;
+import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
 
 public class ActivityMain extends Activity
 {
 
     private static final LatLng HØYSKOLEN = new LatLng(59.408852, 9.059512);
 
-    public static final String MAIN_LAT = "kldaføjsefølakjdf";
-    public static final String MAIN_LNG = "asløkdsalskdjfkal";
+    public static final String HOVED_LATITIUDE = "kldaføjsefølakjdf";
+    public static final String HOVED_LONGITUDE = "asløkdsalskdjfkal";
 
-    private LatLng devicePosition;
-    FragmentMap map;
-    FragmentCloseLocationList closeLocationList;
+    private LatLng enhetensPosisjon;
+    FragmentMap kart;
+    FragmentCloseLocationList destinasjonsliste;
 
-    LinearLayout bottomPanel;
-    LinearLayout mapPanel;
+    LinearLayout bunnPanel;
+    LinearLayout kartPanel;
 
-    private ArrayList<Destination> destinations;
+    private ArrayList<Destinasjon> destinasjoner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -37,35 +37,37 @@ public class ActivityMain extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        AsyncDestination async = new AsyncDestination(this);
-        async.get();
+        // Henter ut destinasjonsdata asynkront:
+        destinasjoner = new ArrayList<>();
+        AsynkronDestinasjon oppgave = new AsynkronDestinasjon(this);
+        oppgave.get();
 
-        destinations = new ArrayList<>();
+        // Lager kart og listepanel:
+        enhetensPosisjon = HØYSKOLEN;
+        visKart();
+        visDestinasjonsListe();
 
-        devicePosition = HØYSKOLEN;
-        displayMap();
-        displayLocationList();
-
-        bottomPanel = (LinearLayout) findViewById(R.id.locationsListFragmentContainer);
-        mapPanel = (LinearLayout) findViewById(R.id.mapFragmentContainer);
-        LayoutTransition transition = new LayoutTransition();
-        transition.enableTransitionType(LayoutTransition.CHANGING);
-        transition.disableTransitionType(LayoutTransition.APPEARING);
-        transition.disableTransitionType(LayoutTransition.DISAPPEARING);
-        transition.disableTransitionType(LayoutTransition.CHANGE_APPEARING);
-        transition.disableTransitionType(LayoutTransition.CHANGE_DISAPPEARING);
-        transition.setDuration(400);
-        bottomPanel.setLayoutTransition(transition);
-        mapPanel.setLayoutTransition(transition);
+        // Setter animasjon på panelene:
+        bunnPanel = (LinearLayout) findViewById(R.id.locationsListFragmentContainer);
+        kartPanel = (LinearLayout) findViewById(R.id.mapFragmentContainer);
+        LayoutTransition overgang = new LayoutTransition();
+        overgang.enableTransitionType(LayoutTransition.CHANGING);
+        overgang.disableTransitionType(LayoutTransition.APPEARING);
+        overgang.disableTransitionType(LayoutTransition.DISAPPEARING);
+        overgang.disableTransitionType(LayoutTransition.CHANGE_APPEARING);
+        overgang.disableTransitionType(LayoutTransition.CHANGE_DISAPPEARING);
+        overgang.setDuration(400);
+        bunnPanel.setLayoutTransition(overgang);
+        kartPanel.setLayoutTransition(overgang);
     }
 
     /**
      * Flytter kameraet til en posisjon.
      * @param position å flytte til.
      */
-    public void panMapTo(LatLng position)
+    public void flyttKameraTil(LatLng position)
     {
-        map.panTo(position);
+        kart.flyttKameraTil(position);
     }
 
     /**
@@ -73,73 +75,65 @@ public class ActivityMain extends Activity
      * @param title tekst på markøren
      * @param position posisjonen alt skal skje på.
      */
-    public void panAndMarkMap(String title, LatLng position)
+    public void flyttTilOgMarker(String title, LatLng position)
     {
-        map.panTo(position);
-        map.markMap(title, position);
+        kart.flyttKameraTil(position);
+        kart.markerKartet(title, position);
     }
 
     /**
      * Endrer vektingen av de to panelene vist. Disse skal være fokusert på der det er mest
      * viktig informasjon.
-     * @param weight Vektingen som skal settes på bunn-panelet.
+     * @param vekt som skal settes på bunn-panelet.
      */
-    public void resizeBottomPanel(float weight)
+    public void skalerPanelVekting(float vekt)
     {
+        // Skalerer bunnpanelet til oppgitt vekt:
+        LinearLayout.LayoutParams param = (LinearLayout.LayoutParams) bunnPanel.getLayoutParams();
+        param.weight = vekt;
+        bunnPanel.setLayoutParams(param);
 
-
-        LinearLayout.LayoutParams panelParams = (LinearLayout.LayoutParams) bottomPanel.getLayoutParams();
-        panelParams.weight = weight;
-        bottomPanel.setLayoutParams(panelParams);
-        //Animation ani = new AnimateWeightChange(bottomPanel, panelParams.weight, weight);
-        //ani.setDuration(1000);
-
-
-
-
-        LinearLayout.LayoutParams mapParams = (LinearLayout.LayoutParams) mapPanel.getLayoutParams();
-        mapParams.weight = 1-weight;
-        mapPanel.setLayoutParams(mapParams);
-        //Animation ani2 = new AnimateWeightChange(bottomPanel, mapParams.weight, 1-weight);
-        //ani2.setDuration(1000);
-
-        //bottomPanel.startAnimation(ani);
-        // mapPanel.startAnimation(ani2);
-    }
+        // Skalerer kartpanel til Kompliment av vekting:
+        LinearLayout.LayoutParams kartParam = (LinearLayout.LayoutParams) kartPanel.getLayoutParams();
+        kartParam.weight = (1-vekt);
+        kartPanel.setLayoutParams(kartParam);
+     }
 
     /**
-     * Initialiserer lokasjonsliste fragmentet.
+     * Initialiserer lokasjonsliste fragmentet. Siden dette er første
+     * fragment legges det ikke til i lokasjonslisten.
      */
-    private void displayLocationList()
+    private void visDestinasjonsListe()
     {
         // Plasserer ut listen:
-        closeLocationList = new FragmentCloseLocationList();
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.locationsListFragmentContainer, closeLocationList);
-        //transaction.addToBackStack(null);
+        destinasjonsliste = new FragmentCloseLocationList();
+        FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
+        transaksjon.replace(R.id.locationsListFragmentContainer, destinasjonsliste);
 
         // Utfører transaksjonen.
-        transaction.commit();
+        transaksjon.commit();
     }
 
     /**
-     * Initialiserer detaljertInfo fragmentet.
+     * Initialiserer detaljertInfo fragmentet. Dette legges på
+     * bak-stakken så man kan hoppe tilbake til listen med tilbake-
+     * knapp.
      */
-    public void displayDetailedInformation(int destinationIndex)
+    public void visDetaljertInformasjonsPanel(int indeksDestinasjon)
     {
         // Plasserer ut listen:
-        FragmentDetailedInfo detailedInfo = new FragmentDetailedInfo();
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.locationsListFragmentContainer, detailedInfo);
-        transaction.addToBackStack(null);
+        FragmentDetailedInfo detaljinfo = new FragmentDetailedInfo();
+        FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
+        transaksjon.replace(R.id.locationsListFragmentContainer, detaljinfo);
+        transaksjon.addToBackStack(null);
 
         // Legger ved hvilken destinasjon som ble valgt.
-        Bundle args = new Bundle();
-        args.putInt("SELECTED_DESTINATION", destinationIndex);
-        detailedInfo.setArguments(args);
+        Bundle argumenter = new Bundle();
+        argumenter.putInt("SELECTED_DESTINATION", indeksDestinasjon);
+        detaljinfo.setArguments(argumenter);
 
         // Utfører transaksjonen.
-        transaction.commit();
+        transaksjon.commit();
     }
 
     /**
@@ -147,95 +141,98 @@ public class ActivityMain extends Activity
      * kartfragmentet (FragmentMap) vil gjøre sin standard
      * visning av enhetens koordinater.
      */
-    private void displayMap()
+    private void visKart()
     {
-        displayMap(null);
+        visKart(null);
     }
 
     /**
      * Viser kartet som fragment inn i "mapFragmentContainer"
-     * @param coordinates koordinater kartet skal sentrere seg rundt.
+     * @param koordinater kartet skal sentrere seg rundt.
      */
-    private void displayMap(LatLng coordinates)
+    private void visKart(LatLng koordinater)
     {
         // Henter nødvendige data
-        map = new FragmentMap();
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
-        transaction.replace(R.id.mapFragmentContainer, map);
+        kart = new FragmentMap();
+        FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
+        transaksjon.replace(R.id.mapFragmentContainer, kart);
+        transaksjon.addToBackStack(null);
 
         // Legger ved koordinater som skal vises i kartet:
-        if (coordinates != null)
+        if (koordinater != null)
         {
-            Bundle item = new Bundle();
-            item.putDouble(MAIN_LAT, coordinates.latitude);
-            item.putDouble(MAIN_LNG, coordinates.longitude);
-            map.setArguments(item);
-            transaction.addToBackStack(null);
+            Bundle argumenter = new Bundle();
+            argumenter.putDouble(HOVED_LATITIUDE, koordinater.latitude);
+            argumenter.putDouble(HOVED_LONGITUDE, koordinater.longitude);
+            kart.setArguments(argumenter);
         }
 
         // Utfører transaksjonen.
-        transaction.commit();
+        transaksjon.commit();
     }
 
     /**
      * @return Enhetens lokasjon
      */
-    public LatLng getDevicePosition()
+    public LatLng getEnhetensPosisjon()
     {
-        return devicePosition;
+        return enhetensPosisjon;
     }
 
     /**
      * @return destinasjonsobjektet
      */
-    public ArrayList<Destination> getDestinations()
+    public ArrayList<Destinasjon> getDestinasjoner()
     {
-        return destinations;
+        return destinasjoner;
     }
 
     /**
      * Setter destinasjonsobjektet og sorterer det etter enhetens posisjon.
-     * @param destinations
+     * @param destinasjoner
      */
-    public void setDestinations(ArrayList<Destination> destinations)
+    public void setDestinasjoner(ArrayList<Destinasjon> destinasjoner)
     {
-        this.destinations = destinations;
-        sortAllDestinations();
+        // Setter og sorterer ny tabell:
+        this.destinasjoner = destinasjoner;
+        sorterDestinasjoner();
 
-        if (closeLocationList != null)
-            closeLocationList.updateView();
+        // Oppdaterer view
+        if (destinasjonsliste != null)
+            destinasjonsliste.oppdaterListen();
     }
 
     /**
-     * Sorterer alle destinasjoner etter avstand fra bruker. Nærmeste først. (devicePosition)
+     * Sorterer alle destinasjoner etter avstand fra bruker. Nærmeste først.
+     * (bruker enhetens Posisjon)
      */
-    public void sortAllDestinations()
+    public void sorterDestinasjoner()
     {
         // Lager ny tabell for å sortere i.
-        Destination[] sortable = new Destination[destinations.size()];
+        Destinasjon[] sorterbar = new Destinasjon[destinasjoner.size()];
         int i = 0;
 
         // Løper igjennom alle objekter og oppdaterer avstand fra enheten:
-        for( Destination destination : destinations )
+        for( Destinasjon destinasjon : destinasjoner)
         {
-            float[] results = new float[10];
+            float[] resultater = new float[10];
             Location.distanceBetween(
-                    devicePosition.latitude, devicePosition.longitude,
-                    destination.getCoordinates().latitude, destination.getCoordinates().longitude,
-                    results
+                    enhetensPosisjon.latitude, enhetensPosisjon.longitude,
+                    destinasjon.getKoordinat().latitude, destinasjon.getKoordinat().longitude,
+                    resultater
             );
 
-            destination.setDistanceFromDevice(results[0]);
-            sortable[i++] = destination; // Legger til elemeneter inn i en sorterbar tabell
+            destinasjon.setAvstandFraEnhet(resultater[0]);
+            sorterbar[i++] = destinasjon; // Legger til elemeneter inn i en sorterbar tabell
         }
 
         // Sorterer tabellen:
-        Arrays.sort(sortable);
+        Arrays.sort(sorterbar);
 
         // Oppdaterer arraylist for visning:
-        destinations.clear();
-        for( Destination destination : sortable )
-            destinations.add(destination);
+        destinasjoner.clear();
+        for( Destinasjon destinasjon : sorterbar )
+            destinasjoner.add(destinasjon);
     }
 
 }

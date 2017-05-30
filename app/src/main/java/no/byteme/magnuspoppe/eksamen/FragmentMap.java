@@ -21,15 +21,15 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class FragmentMap extends Fragment implements OnMapReadyCallback
 {
     // Google sitt fragment for kart:
-    MapFragment mapFragment;
+    MapFragment map;
 
     // Koordinater som vises:
-    LatLng latLng;
+    LatLng koordinat;
 
     // Kartobjeketet for operasjoner mot kartet.
-    GoogleMap map;
+    GoogleMap googleKart;
 
-    final static private int DEFAULT_ZOOM = 14;
+    final static private int STANDARD_ZOOM = 14;
 
     public FragmentMap()
     {
@@ -42,63 +42,73 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
     }
 
+    /**
+     * onMapReady lastes inn da kartet er ferdig med sin asynkrone oppgave.
+     * Dette er oppsettet av kartet.
+     * @param map
+     */
     @Override
     public void onMapReady(GoogleMap map)
     {
-        this.map = map;
+        // Lagrer og velger utseende:
+        this.googleKart = map;
         map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, DEFAULT_ZOOM));
+
+        // Flytter kamera til rikitg initiell posisjon
+        flyttKameraTil(koordinat);
     }
 
     /**
      * Flytter kartets "layout" til oppgitte koordinater med fancy animasjon.
-     * @param to koordinater å flytte til.
+     * @param til koordinater å flytte til.
      */
-    public void panTo(LatLng to)
+    public void flyttKameraTil(LatLng til)
     {
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(to, DEFAULT_ZOOM));
+        googleKart.animateCamera(CameraUpdateFactory.newLatLngZoom(til, STANDARD_ZOOM));
     }
 
     /**
      * Markerer kartet med standard google maps markør.
-     * @param title Tittelen på markøren
-     * @param position posisjonen markøren skal plasseres på
+     * @param tittel Tittelen på markøren
+     * @param posisjon posisjonen markøren skal plasseres på
      */
-    public void markMap(String title, LatLng position)
+    public void markerKartet(String tittel, LatLng posisjon)
     {
-        map.addMarker(new MarkerOptions()
-                .position(position)
+        googleKart.addMarker(new MarkerOptions()
+                .position(posisjon)
                 .draggable(false)
-                .title(title)
+                .title(tittel)
         );
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        // Inflate the layout for this fragment
-        View fragmentView = inflater.inflate(R.layout.fragment_map, container, false);
+        View view = inflater.inflate(R.layout.fragment_map, container, false);
 
         // Henter ut koordinater fra bundle:
-        Bundle arguments = this.getArguments();
+        Bundle argumenter = this.getArguments();
 
-        if (arguments != null)
+        if (argumenter != null)
         {
-            latLng = new LatLng(
-                    arguments.getDouble(ActivityMain.MAIN_LAT),
-                    arguments.getDouble(ActivityMain.MAIN_LNG)
+            // Hvis koordinater finnes, skal de lagres.
+            koordinat = new LatLng(
+                    argumenter.getDouble(ActivityMain.HOVED_LATITIUDE),
+                    argumenter.getDouble(ActivityMain.HOVED_LONGITUDE)
             );
         }
         else
         {
-            ActivityMain activity = (ActivityMain) getActivity();
-            latLng = activity.getDevicePosition();
+            // Hvis ikke kordinater finnes, skal enhetens posisjon hentes ut.
+            ActivityMain aktivitet = (ActivityMain) getActivity();
+            koordinat = aktivitet.getEnhetensPosisjon();
         }
 
         // Henter ut kartfragmentet
-        mapFragment = (MapFragment) this.getChildFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        map = (MapFragment) this.getChildFragmentManager().findFragmentById(R.id.map);
+        map.getMapAsync(this);
 
-        return fragmentView;
+        // Lager view:
+        return view;
     }
 }

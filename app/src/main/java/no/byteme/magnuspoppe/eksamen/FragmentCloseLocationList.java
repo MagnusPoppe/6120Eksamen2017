@@ -11,7 +11,7 @@ import android.widget.ListView;
 
 import java.util.ArrayList;
 
-import no.byteme.magnuspoppe.eksamen.datamodel.Destination;
+import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
 
 
 /**
@@ -19,9 +19,9 @@ import no.byteme.magnuspoppe.eksamen.datamodel.Destination;
  */
 public class FragmentCloseLocationList extends Fragment
 {
-    ArrayList<Destination> destinations;
-    AdapterCloseLocations adapterCloseLocations;
-    ListView destinationsList;
+    ArrayList<Destinasjon> destinasjoner;
+    AdapterDestinasjoner adapter;
+    ListView destinasjonslisten;
 
     public static final String SELECTED_DESTINATION = "aksjdhfalskjdfh";
 
@@ -33,49 +33,51 @@ public class FragmentCloseLocationList extends Fragment
     /**
      * Oppdaterer listen. Dette brukes ved endring i datasettet.
      */
-    public void updateView()
+    public void oppdaterListen()
     {
-        if (destinationsList != null)
-            destinationsList.invalidate();
+        if (destinasjonslisten != null)
+            destinasjonslisten.invalidate();
     }
 
     @Override
     public void onResume()
     {
         super.onResume();
-        ActivityMain activityMain = (ActivityMain) getActivity();
-        activityMain.resizeBottomPanel(0.4f);
+        ActivityMain aktivitet = (ActivityMain) getActivity();
+        aktivitet.skalerPanelVekting(0.4f);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
-        View view = inflater.inflate(R.layout.fragment_close_location_list, container, false);
-        final ActivityMain activityMain = (ActivityMain) getActivity();
-        destinations = activityMain.getDestinations();
-        destinationsList = (ListView) view.findViewById(R.id.closeLocationsList);
+        final ActivityMain aktivitet = (ActivityMain) getActivity();
 
-        adapterCloseLocations = new AdapterCloseLocations(
+        View view = inflater.inflate(R.layout.fragment_close_location_list, container, false);
+
+        destinasjoner = aktivitet.getDestinasjoner();
+        destinasjonslisten = (ListView) view.findViewById(R.id.destinasjonsliste);
+
+        adapter = new AdapterDestinasjoner(
                 getActivity().getApplicationContext(),
-                destinations
+                destinasjoner
         );
 
-        destinationsList.setAdapter(adapterCloseLocations);
-        destinationsList.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        destinasjonslisten.setAdapter(adapter);
+        destinasjonslisten.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
                 // Bundle item = new Bundle();
                 // item.putInt(SELECTED_DESTINATION, position);
-                activityMain.panAndMarkMap(
-                        destinations.get(position).getName(),
-                        destinations.get(position).getCoordinates()
+                aktivitet.flyttTilOgMarker(
+                        destinasjoner.get(position).getNavn(),
+                        destinasjoner.get(position).getKoordinat()
                 );
 
-                activityMain.resizeBottomPanel(0.6f);
-                activityMain.displayDetailedInformation(position);
+                aktivitet.skalerPanelVekting(0.6f);
+                aktivitet.visDetaljertInformasjonsPanel(position);
             }
         });
 

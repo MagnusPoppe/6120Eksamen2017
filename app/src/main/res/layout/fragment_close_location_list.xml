@@ -6,7 +6,7 @@
              tools:context="no.byteme.magnuspoppe.eksamen.FragmentCloseLocationList">
 
     <ListView
-        android:id="@+id/closeLocationsList"
+        android:id="@+id/destinasjonsliste"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
