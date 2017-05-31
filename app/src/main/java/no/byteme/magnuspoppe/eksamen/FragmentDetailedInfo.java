@@ -74,6 +74,30 @@ public class FragmentDetailedInfo extends Fragment
     }
 
     /**
+     * Jeg bruker onResume() til å styre at aktiviteten vet at dette
+     * vinduet vises med en enkel boolean.
+     */
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        ActivityMain aktivitet = (ActivityMain) getActivity();
+        aktivitet.setDetaljinfoVises(true);
+    }
+
+    /**
+     * Jeg bruker onPause() til å styre at aktiviteten vet at dette
+     * vinduet IKKE vises med en enkel boolean.
+     */
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        ActivityMain aktivitet = (ActivityMain) getActivity();
+        aktivitet.setDetaljinfoVises(false);
+    }
+
+    /**
      * En egen asynkron oppgave for å laste ned et enkelt bilde med oppgitt url.
      */
     private class DownloadImageTask extends AsyncTask<String, Void, Long>

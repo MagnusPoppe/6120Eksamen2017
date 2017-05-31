@@ -3,6 +3,7 @@ package no.byteme.magnuspoppe.eksamen;
 
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.design.widget.Snackbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +13,12 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.ArrayList;
+
+import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
 
 /**
  * Dette fragmentet inneholder kartet som vises på
@@ -28,8 +34,13 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
 
     // Kartobjeketet for operasjoner mot kartet.
     GoogleMap googleKart;
+    GoogleMap.OnMarkerClickListener listener;
 
-    final static private int STANDARD_ZOOM = 18;
+    // Liste for markøerer lagt ut på kartet:
+    ArrayList<MyMarker> markorer;
+
+    final static private int STANDARD_ZOOM = 16;
+    final static private int YTRE_ZOOM = 10;
 
     public boolean isBrukerEnhetPosisjon()
     {
@@ -63,7 +74,30 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         map.getUiSettings().setMapToolbarEnabled(true);
         this.googleKart = map;
         // Flytter kamera til rikitg initiell posisjon
-        googleKart.animateCamera(CameraUpdateFactory.newLatLngZoom(koordinat, STANDARD_ZOOM));
+        googleKart.animateCamera(CameraUpdateFactory.newLatLngZoom(koordinat, YTRE_ZOOM));
+
+        final ActivityMain aktivitet = (ActivityMain) getActivity();
+        aktivitet.settUtAlleMarkorer();
+
+        listener = new GoogleMap.OnMarkerClickListener()
+        {
+            @Override
+            public boolean onMarkerClick(Marker marker)
+            {
+                for (MyMarker markor : markorer)
+                {
+                    if (markor.equals(marker))
+                    {
+                        aktivitet.visDetaljertInformasjonsPanel(markor.getDestinasjon());
+                        marker.showInfoWindow();
+                        flyttKameraTil(markor.getDestinasjon().getKoordinat());
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
+        googleKart.setOnMarkerClickListener(listener);
     }
 
     /**
@@ -88,16 +122,29 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
 
     /**
      * Markerer kartet med standard google maps markør.
-     * @param tittel Tittelen på markøren
+     * @param destinasjon som skal plasseres ut
      * @param posisjon posisjonen markøren skal plasseres på
      */
-    public void markerKartet(String tittel, LatLng posisjon)
+    public void markerKartet(Destinasjon destinasjon, LatLng posisjon)
     {
-        googleKart.addMarker(new MarkerOptions()
-                .position(posisjon)
-                .draggable(false)
-                .title(tittel)
-        );
+        if (googleKart != null)
+        {
+            googleKart.addMarker(new MarkerOptions()
+                    .position(posisjon)
+                    .draggable(false)
+                    .title(destinasjon.getNavn())
+            );
+            markorer.add(new MyMarker(destinasjon.getNavn(),destinasjon));
+        }
+    }
+
+    public void fjernAlleMarkorer()
+    {
+        if (googleKart != null)
+            googleKart.clear();
+
+        if (markorer != null)
+            markorer.clear();
     }
 
     @Override
@@ -124,6 +171,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
             ActivityMain aktivitet = (ActivityMain) getActivity();
             koordinat = aktivitet.getEnhetensPosisjon();
         }
+
+        markorer = new ArrayList<>();
 
         // Henter ut kartfragmentet
         map = (MapFragment) this.getChildFragmentManager().findFragmentById(R.id.map);

@@ -48,6 +48,12 @@ public class AsynkronDestinasjon
         return null; // NOT YET IMPLEMENTED
     }
 
+    public void post(Destinasjon destinasjon)
+    {
+        DestinasjonsOppgave oppgave = new DestinasjonsOppgave();
+        oppgave.execute(GRUNN_URL, "POST", destinasjon.toJSON());
+    }
+
     private class DestinasjonsOppgave extends AsyncTask<String, Void, Long>
     {
 
@@ -85,10 +91,11 @@ public class AsynkronDestinasjon
                     oppkobling.setDoOutput(true);
                     oppkobling.setChunkedStreamingMode(0);
                     oppkobling.setRequestProperty("Transfer-Encoding", "chunked");
-                } else
-                {
+                }
+                else {
                     oppkobling.setDoInput(true);
                 }
+
                 oppkobling.connect();
 
                 if (params[HTTP_METODE].equals("PUT")
@@ -99,8 +106,8 @@ public class AsynkronDestinasjon
                     ut.write(params[PAKKE]);
                     ut.close();
                 }
-
-                if (oppkobling.getResponseCode() != HttpURLConnection.HTTP_OK)
+                int respons = oppkobling.getResponseCode();
+                if (respons != HttpURLConnection.HTTP_OK)
                     return FEIL;
 
                 if (params[HTTP_METODE].equals("GET"))

@@ -73,7 +73,7 @@ public class FragmentCloseLocationList extends Fragment
                 // Bundle item = new Bundle();
                 // item.putInt(SELECTED_DESTINATION, position);
                 aktivitet.flyttTilOgMarker(
-                        destinasjoner.get(position).getNavn(),
+                        destinasjoner.get(position),
                         destinasjoner.get(position).getKoordinat()
                 );
 

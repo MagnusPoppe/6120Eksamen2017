@@ -5,4 +5,5 @@
     <dimen name="largeText">16sp</dimen>
     <dimen name="foregroundElevation">6dp</dimen>
     <dimen name="backgroundElevation">2sp</dimen>
+    <dimen name="veryLargeText">24sp</dimen>
 </resources>

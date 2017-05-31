@@ -6,6 +6,8 @@ import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -51,6 +53,8 @@ public class ActivityMain extends Activity
     private FloatingActionButton leggTilKnapp;
     private ArrayList<Destinasjon> destinasjoner;
 
+    private boolean detaljinfoVises;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -61,8 +65,16 @@ public class ActivityMain extends Activity
 
         // Henter ut destinasjonsdata asynkront:
         destinasjoner = new ArrayList<>();
-        AsynkronDestinasjon oppgave = new AsynkronDestinasjon(this);
-        oppgave.get();
+
+        if (enhetPåNett())
+        {
+            AsynkronDestinasjon oppgave = new AsynkronDestinasjon(this);
+            oppgave.get();
+        }
+        else
+        {
+            // TODO: hent data fra lokal database.
+        }
 
         // Create an instance of GoogleAPIClient.
         if (mGoogleApiClient == null) {
@@ -117,13 +129,13 @@ public class ActivityMain extends Activity
 
     /**
      * Flytter kameraet til en posisjon og setter en markør i posisjonen.
-     * @param title tekst på markøren
+     * @param destinasjon sitt navn blir tekst på markøren
      * @param position posisjonen alt skal skje på.
      */
-    public void flyttTilOgMarker(String title, LatLng position)
+    public void flyttTilOgMarker(Destinasjon destinasjon, LatLng position)
     {
         kart.flyttKameraTil(position);
-        kart.markerKartet(title, position);
+        kart.markerKartet(destinasjon, position);
     }
 
     /**
@@ -166,6 +178,12 @@ public class ActivityMain extends Activity
      */
     public void visDetaljertInformasjonsPanel(int indeksDestinasjon)
     {
+        // Vi vil alltid at når man klikker tilbakeknappen skal man
+        // se listen. Vi fjerner derfor et lag om vi allerede viser detaljinfo vinduet
+        // når et nytt hentes inn.
+        if (detaljinfoVises)
+            getFragmentManager().popBackStack();
+
         // Plasserer ut listen:
         FragmentDetailedInfo detaljinfo = new FragmentDetailedInfo();
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
@@ -181,16 +199,41 @@ public class ActivityMain extends Activity
         transaksjon.commit();
     }
 
+    /**
+     * Viser detaljert informasjonspanel med et gitt destinasjonsobjekt.
+     * @param destinasjon som skal vises.
+     */
+    public void visDetaljertInformasjonsPanel(Destinasjon destinasjon)
+    {
+        for (int i = 0; i < destinasjoner.size(); i++)
+        {
+            Destinasjon andre = destinasjoner.get(i);
+            if (andre.equals(destinasjon))
+            {
+                visDetaljertInformasjonsPanel(i);
+                return;
+            }
+        }
+    }
 
+    /**
+     * Viser "legg til panelet i vinduet. Kartet skal sentrers til posisjonen
+     * brukeren har og kan ikke flyttes nå. TODO!
+     */
     private void visLeggTilLokasjon()
     {
-        // Plasserer ut listen:
+        if (lokasjon == null)
+        {
+            Snackbar.make(this.getCurrentFocus(), "Lokasjon ikke enda funnet.", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+        // Plasserer ut legg-til panlet:
         FragmentAddLocation leggTil = new FragmentAddLocation();
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
         transaksjon.replace(R.id.locationsListFragmentContainer, leggTil);
         transaksjon.addToBackStack(null);
 
-        // Legger ved hvilken destinasjon som ble valgt.
+        // Legger ved informasjon om nåværende posisjon:
         Bundle argumenter = new Bundle();
         argumenter.putDouble("MOH", lokasjon.getAltitude());
         argumenter.putDouble("LAT", lokasjon.getLatitude());
@@ -268,14 +311,46 @@ public class ActivityMain extends Activity
     }
 
     /**
+     * Legger til en destinasjon på sin korrekte sorterte plass i
+     * ArrayListen av destinasjoner.
+     * @param destinasjon
+     */
+    public void leggTilDestinasjon(Destinasjon destinasjon)
+    {
+        for (int i = 0; i < destinasjoner.size(); i++)
+        {
+            Destinasjon andre = destinasjoner.get(i);
+
+            if (destinasjon.compareTo(andre) < 0)
+            {
+                destinasjoner.add(i, destinasjon);
+            }
+        }
+    }
+
+    /**
      * Setter destinasjonsobjektet og sorterer det etter enhetens posisjon.
      * @param destinasjoner
      */
     public void setDestinasjoner(ArrayList<Destinasjon> destinasjoner)
     {
+        // Rydder vekk alle markører på kartet:
+        if (kart != null)
+            kart.fjernAlleMarkorer();
+
         // Setter og sorterer ny tabell:
         this.destinasjoner = destinasjoner;
         sorterDestinasjoner();
+    }
+
+    /**
+     * Markerer kartet med markører for alle destinasjoner.
+     */
+    public void settUtAlleMarkorer()
+    {
+        if (kart != null)
+            for(Destinasjon destinasjon : destinasjoner)
+                kart.markerKartet(destinasjon, destinasjon.getKoordinat());
     }
 
     /**
@@ -294,6 +369,7 @@ public class ActivityMain extends Activity
         // Løper igjennom alle objekter og oppdaterer avstand fra enheten:
         for( Destinasjon destinasjon : destinasjoner)
         {
+            // Beregner avstand mellom destinasjon og enhet
             float[] resultater = new float[10];
             Location.distanceBetween(
                     getEnhetensPosisjon().latitude, getEnhetensPosisjon().longitude,
@@ -301,6 +377,7 @@ public class ActivityMain extends Activity
                     resultater
             );
 
+            // Setter avstand og markerer kartet med destinasjonen.
             destinasjon.setAvstandFraEnhet(resultater[0]);
             sorterbar[i++] = destinasjon; // Legger til elemeneter inn i en sorterbar tabell
         }
@@ -315,7 +392,10 @@ public class ActivityMain extends Activity
 
         // Oppdaterer view
         if (destinasjonsliste != null)
+        {
             destinasjonsliste.oppdaterListen();
+            settUtAlleMarkorer();
+        }
     }
 
     /**
@@ -335,16 +415,38 @@ public class ActivityMain extends Activity
     public void leggTilLokasjon(View view)
     {
         FloatingActionButton fab = (FloatingActionButton)view;
+
+        if (lokasjon == null)
+        {
+            Snackbar.make(view, "Kan ikke legge til uten enhetens lokasjon.", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+
         fab.setVisibility(View.GONE);
-
         skalerPanelVekting(0.8f);
-
         visLeggTilLokasjon();
     }
 
+    /**
+     * @return Legg til knappens objekt. (FAB)
+     */
     public FloatingActionButton getLeggTilKnapp()
     {
         return leggTilKnapp;
+    }
+
+    /**
+     * Sjekker om enheten er koblet til internett. Dette gjøres for
+     * å unngå feil ved asynkrone oppgaver.
+     * @return true hvis internett, false hvis ikke.
+     */
+    public boolean enhetPåNett()
+    {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(
+                Activity.CONNECTIVITY_SERVICE
+        );
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+        return (networkInfo != null && networkInfo.isConnected());
     }
 
     //---------------------------------------------
@@ -359,7 +461,8 @@ public class ActivityMain extends Activity
      * Direkte kopi fra leksjon 12b.
      */
     @Override
-    public void onConnected(Bundle connectionHint) {
+    public void onConnected(Bundle connectionHint)
+    {
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
 
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
@@ -367,8 +470,11 @@ public class ActivityMain extends Activity
         } else {
             // OK: Appen har tillatelsen ACCESS_FINE_LOCATION. Finn siste posisjon
             Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            if (lastLocation != null)
+            if (lastLocation != null){
                 this.setEnhetensPosisjon(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
+                lokasjon = lastLocation;
+                getLeggTilKnapp().setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -418,4 +524,8 @@ public class ActivityMain extends Activity
     }
 
 
+    public void setDetaljinfoVises(boolean detaljinfoVises)
+    {
+        this.detaljinfoVises = detaljinfoVises;
+    }
 }
