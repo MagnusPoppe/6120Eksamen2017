@@ -27,15 +27,16 @@ public class Preferences extends PreferenceFragment implements SharedPreferences
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = super.onCreateView(inflater, container, savedInstanceState);
 
-        SharedPreferences.OnSharedPreferenceChangeListener listener =
-                new SharedPreferences.OnSharedPreferenceChangeListener()
-                {
-                    @Override
-                    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
-                    {
-                        Log.d("PREFERENCES", key + " HAS CHANGED!");
-                    }
-                };
+//        SharedPreferences.OnSharedPreferenceChangeListener listener =
+//                new SharedPreferences.OnSharedPreferenceChangeListener()
+//                {
+//                    @Override
+//                    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
+//                    {
+//                        Log.d("PREFERENCES", key + " HAS CHANGED!");
+//                    }
+//                };
+//
         return view;
     }
 
@@ -64,9 +65,11 @@ public class Preferences extends PreferenceFragment implements SharedPreferences
 
         SharedPreferences.Editor editor = preferences.edit();
 
+        String email = sharedPreferences.getString("email", "");
+
         // Lagrer mulige endringer:
         if (key.equals("email"))
-            editor.putString("email", sharedPreferences.getString("email", ""));
+            editor.putString("email", email);
 
         if (key.equals("firstName"))
             editor.putString("firstName", sharedPreferences.getString("firstName", ""));
@@ -74,7 +77,7 @@ public class Preferences extends PreferenceFragment implements SharedPreferences
         if (key.equals("lastName"))
             editor.putString("lastName", sharedPreferences.getString("lastName", ""));
 
-        editor.apply();
+        editor.commit();
 
         // Passer på at objektet for brukeren har oppdatert seg:
         aktivitet.brukerOppsett();

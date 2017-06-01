@@ -511,16 +511,16 @@ public class ActivityController extends Activity
     {
         SharedPreferences preferences = getSharedPreferences(INNSTILLINGER_BRUKER, MODE_PRIVATE);
 
-        if (! preferences.contains("epost"))
+        if (preferences.contains("email"))
         {
-            bruker = null;
-        }
-        else {
             bruker = new Bruker(
                     preferences.getString("email", ""),
                     preferences.getString("firstName", ""),
                     preferences.getString("lastName", "")
             );
+        }
+        else {
+            bruker = null;
         }
     }
 
@@ -594,7 +594,6 @@ public class ActivityController extends Activity
     {
         return destinasjoner;
     }
-
 
     /**
      * @return ferdig konfigurert kart.
