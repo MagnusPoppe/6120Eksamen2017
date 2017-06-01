@@ -1,7 +1,6 @@
 package no.byteme.magnuspoppe.eksamen;
 
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.support.design.widget.TextInputEditText;
@@ -93,7 +92,7 @@ public class FragmentAddLocation extends Fragment
 
         denneDestinasjonen.setEier("magnus@hjemme.no");
 
-        ActivityMain aktivitet = (ActivityMain) getActivity();
+        ActivityController aktivitet = (ActivityController) getActivity();
 
         if(aktivitet.enhetPåNett())
         {

@@ -39,6 +39,19 @@ public class Destinasjon implements Comparable
         this.moh = (int) moh;
     }
 
+    public Destinasjon(String eier, String navn, String type, String beskrivelse,
+                       String bildeURL, double latitude, double longitude, int moh
+    ) {
+        this.eier = eier;
+        this.navn = navn;
+        this.type = type;
+        this.beskrivelse = beskrivelse;
+        this.bildeURL = bildeURL;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.moh = moh;
+    }
+
     /**
      * Lager et destinajsonsobjekt ut ifra et JSONObject.
      * Objektet er ferdig formatert fra API og skal ha strukturen:
@@ -175,5 +188,10 @@ public class Destinasjon implements Comparable
     public void setEier(String eier)
     {
         this.eier = eier;
+    }
+
+    public void setDatabaseID(int databaseID)
+    {
+        this.databaseID = databaseID;
     }
 }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="Bruker Informasjon">
+        <EditTextPreference
+            android:title="E-Post Adresse"
+            android:key="email"
+            android:id="@+id/email"/>
+        <EditTextPreference
+            android:title="Fornavn"
+            android:key="firstName"
+            android:id="@+id/firstName"/>
+        <EditTextPreference
+            android:title="Etternavn"
+            android:key="lastName"
+            android:id="@+id/lastName"/>
+    </PreferenceCategory>
+</PreferenceScreen>

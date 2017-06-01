@@ -70,13 +70,27 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
     {
         // Lagrer og velger utseende:
         map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
-        map.getUiSettings().setMyLocationButtonEnabled(true);
-        map.getUiSettings().setMapToolbarEnabled(true);
+
+        // Tillatelsen er allerede hentet på dette punktet.
+        // Try catch for å ikke støte på feilmelidnger.
+        try {
+            map.setMyLocationEnabled(true);
+            map.getUiSettings().setMyLocationButtonEnabled(false);
+        }
+        catch (SecurityException e)
+        {
+            Snackbar.make(
+                    getView(),
+                    "Har ikke tillatelse til å bruke lokasjon.",
+                    Snackbar.LENGTH_SHORT
+            ).show();
+        }
+
         this.googleKart = map;
         // Flytter kamera til rikitg initiell posisjon
         googleKart.animateCamera(CameraUpdateFactory.newLatLngZoom(koordinat, YTRE_ZOOM));
 
-        final ActivityMain aktivitet = (ActivityMain) getActivity();
+        final ActivityController aktivitet = (ActivityController) getActivity();
         aktivitet.settUtAlleMarkorer();
 
         listener = new GoogleMap.OnMarkerClickListener()
@@ -159,8 +173,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         {
             // Hvis koordinater finnes, skal de lagres.
             koordinat = new LatLng(
-                    argumenter.getDouble(ActivityMain.HOVED_LATITIUDE),
-                    argumenter.getDouble(ActivityMain.HOVED_LONGITUDE)
+                    argumenter.getDouble(ActivityController.HOVED_LATITIUDE),
+                    argumenter.getDouble(ActivityController.HOVED_LONGITUDE)
             );
             brukerEnhetPosisjon = false;
         }
@@ -168,7 +182,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         {
             // Hvis ikke kordinater finnes, skal enhetens posisjon hentes ut.
             brukerEnhetPosisjon = true;
-            ActivityMain aktivitet = (ActivityMain) getActivity();
+            ActivityController aktivitet = (ActivityController) getActivity();
             koordinat = aktivitet.getEnhetensPosisjon();
         }
 

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.animation.LayoutTransition;
 import android.app.Activity;
 import android.app.FragmentTransaction;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -13,47 +14,67 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.Toolbar;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.model.LatLng;
 
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import no.byteme.magnuspoppe.eksamen.datamodel.Bruker;
 import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
+import no.byteme.magnuspoppe.eksamen.datamodel.DestinasjonDB;
 
-public class ActivityMain extends Activity
+/**
+ * Dette er kontrolleren for hele applikasjonen.
+ */
+public class ActivityController extends Activity
         implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener
 {
-    private static final LatLng HOYSKOLEN = new LatLng(59.408852, 9.059512);
 
+    // Konstanter
     public static final String HOVED_LATITIUDE = "kldaføjsefølakjdf";
     public static final String HOVED_LONGITUDE = "asløkdsalskdjfkal";
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 978123;
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 987122;
+    private static final LatLng HOYSKOLEN = new LatLng(59.408852, 9.059512);
+    public static final String INNSTILLINGER_BRUKER = "no.byteme.magnuspoppe.eksamen.preferences";
 
-    private Location lokasjon = null;
+    // "STATE":
+    private boolean detaljinfoVises;
+
     // Klient som kommuniserer med Google Play API
     private GoogleApiClient mGoogleApiClient = null;
 
+    // Kartverdier:
     private LatLng enhetensPosisjon;
+    private Location lokasjon = null;
     private FragmentMap kart;
     private FragmentCloseLocationList destinasjonsliste;
 
+    // Grafiske views:
     private LinearLayout bunnPanel;
     private LinearLayout kartPanel;
-
     private FloatingActionButton leggTilKnapp;
-    private ArrayList<Destinasjon> destinasjoner;
 
-    private boolean detaljinfoVises;
+    // Datamodell:
+    private Bruker bruker;
+    private ArrayList<Destinasjon> destinasjoner;
+    private DestinasjonDB db;
+
+    //---------------------------------------------------------------
+    //      Metoder som hører med aktivitetens livssyklus
+    //---------------------------------------------------------------
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -61,22 +82,27 @@ public class ActivityMain extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Henter bruker fra "SharedPreferences"
+        brukerOppsett();
+
+        // Setter opp nødvendig GUI:
+        Toolbar appLinje = (Toolbar) findViewById(R.id.appLinje);
+        setActionBar(appLinje);
         leggTilKnapp = (FloatingActionButton) findViewById(R.id.leggTil);
+        animasjonsOppsett();
 
         // Henter ut destinasjonsdata asynkront:
         destinasjoner = new ArrayList<>();
+        db = new DestinasjonDB(getApplicationContext());
 
+        // Henter ut datasett:
         if (enhetPåNett())
         {
             AsynkronDestinasjon oppgave = new AsynkronDestinasjon(this);
             oppgave.get();
         }
-        else
-        {
-            // TODO: hent data fra lokal database.
-        }
 
-        // Create an instance of GoogleAPIClient.
+        // Lager Google API Klient objekt:
         if (mGoogleApiClient == null) {
             GoogleApiClient.Builder apiBuilder = new GoogleApiClient.Builder(this);
             apiBuilder.addConnectionCallbacks(this);        /* ConnectionCallbacks-objekt */
@@ -85,19 +111,6 @@ public class ActivityMain extends Activity
             mGoogleApiClient = apiBuilder.build();
         }
 
-        // Setter animasjon på panelene:
-        bunnPanel = (LinearLayout) findViewById(R.id.locationsListFragmentContainer);
-        kartPanel = (LinearLayout) findViewById(R.id.mapFragmentContainer);
-        LayoutTransition overgang = new LayoutTransition();
-        overgang.enableTransitionType(LayoutTransition.CHANGING);
-        overgang.disableTransitionType(LayoutTransition.APPEARING);
-        overgang.disableTransitionType(LayoutTransition.DISAPPEARING);
-        overgang.disableTransitionType(LayoutTransition.CHANGE_APPEARING);
-        overgang.disableTransitionType(LayoutTransition.CHANGE_DISAPPEARING);
-        overgang.setDuration(400);
-        bunnPanel.setLayoutTransition(overgang);
-        kartPanel.setLayoutTransition(overgang);
-
         // Lager kart og listepanel:
         enhetensPosisjon = null;
         visKart();
@@ -105,56 +118,69 @@ public class ActivityMain extends Activity
     }
 
     @Override
-    protected void onStart() {
+    protected void onStart()
+    {
         super.onStart();
         // Connect the ApiClient to Google Services
         mGoogleApiClient.connect();
+
+        // Kobler til DB:
+        db.open();
+
+        if (enhetPåNett())
+        {
+            Destinasjon[] uopplastet = db.getAlleDestinasjoner();
+            if (uopplastet != null)
+            {
+                AsynkronDestinasjon asynk = new AsynkronDestinasjon(this);
+                asynk.post(uopplastet);
+            }
+        }
     }
 
     @Override
-    protected void onStop() {
+    protected void onStop()
+    {
         // Disconnect the ApiClient
         mGoogleApiClient.disconnect();
+
+        // Kobler fra DB:
+        db.close();
+
         super.onStop();
     }
 
+    //---------------------------------------------------------------
+    //      Metoder for styring av fragmenter
+    //---------------------------------------------------------------
+
     /**
-     * Flytter kameraet til en posisjon.
-     * @param position å flytte til.
+     * Lager og viser innstillingsvindu.
      */
-    public void flyttKameraTil(LatLng position)
+    private void visInnstillinger()
     {
-        kart.flyttKameraTil(position);
+        visInnstillingPanel(true);
+        Preferences innstillingFragment = new Preferences();
+        FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
+        transaksjon.replace(R.id.innstillingFragmentHolder, innstillingFragment);
+        transaksjon.addToBackStack(null);
+
+        // Utfører transaksjonen.
+        transaksjon.commit();
     }
 
     /**
-     * Flytter kameraet til en posisjon og setter en markør i posisjonen.
-     * @param destinasjon sitt navn blir tekst på markøren
-     * @param position posisjonen alt skal skje på.
+     * Viser innstillingspanel-holderen for å få hvit bakgrunn på
+     * innstillingsvindu. Dette er egendefinert HACK for å unngå transparent
+     * bakgrunn.
+     * @param vis panel eller ikke vis panel
      */
-    public void flyttTilOgMarker(Destinasjon destinasjon, LatLng position)
+    public void visInnstillingPanel(boolean vis)
     {
-        kart.flyttKameraTil(position);
-        kart.markerKartet(destinasjon, position);
+        LinearLayout panel = (LinearLayout) findViewById(R.id.innstillingFragmentHolder);
+        if (vis) panel.setVisibility(View.VISIBLE);
+        else panel.setVisibility(View.GONE);
     }
-
-    /**
-     * Endrer vektingen av de to panelene vist. Disse skal være fokusert på der det er mest
-     * viktig informasjon.
-     * @param vekt som skal settes på bunn-panelet.
-     */
-    public void skalerPanelVekting(float vekt)
-    {
-        // Skalerer bunnpanelet til oppgitt vekt:
-        LinearLayout.LayoutParams param = (LinearLayout.LayoutParams) bunnPanel.getLayoutParams();
-        param.weight = vekt;
-        bunnPanel.setLayoutParams(param);
-
-        // Skalerer kartpanel til Kompliment av vekting:
-        LinearLayout.LayoutParams kartParam = (LinearLayout.LayoutParams) kartPanel.getLayoutParams();
-        kartParam.weight = (1-vekt);
-        kartPanel.setLayoutParams(kartParam);
-     }
 
     /**
      * Initialiserer lokasjonsliste fragmentet. Siden dette er første
@@ -165,7 +191,7 @@ public class ActivityMain extends Activity
         // Plasserer ut listen:
         destinasjonsliste = new FragmentCloseLocationList();
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
-        transaksjon.replace(R.id.locationsListFragmentContainer, destinasjonsliste);
+        transaksjon.replace(R.id.ListeFragmentHolder, destinasjonsliste);
 
         // Utfører transaksjonen.
         transaksjon.commit();
@@ -184,10 +210,13 @@ public class ActivityMain extends Activity
         if (detaljinfoVises)
             getFragmentManager().popBackStack();
 
+        // Skalerer om vindu for å flytte brukerens fokus:
+        skalerPanelVekting(getResources().getDimension(R.dimen.largePanel));
+
         // Plasserer ut listen:
         FragmentDetailedInfo detaljinfo = new FragmentDetailedInfo();
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
-        transaksjon.replace(R.id.locationsListFragmentContainer, detaljinfo);
+        transaksjon.replace(R.id.ListeFragmentHolder, detaljinfo);
         transaksjon.addToBackStack(null);
 
         // Legger ved hvilken destinasjon som ble valgt.
@@ -230,7 +259,7 @@ public class ActivityMain extends Activity
         // Plasserer ut legg-til panlet:
         FragmentAddLocation leggTil = new FragmentAddLocation();
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
-        transaksjon.replace(R.id.locationsListFragmentContainer, leggTil);
+        transaksjon.replace(R.id.ListeFragmentHolder, leggTil);
         transaksjon.addToBackStack(null);
 
         // Legger ved informasjon om nåværende posisjon:
@@ -263,7 +292,7 @@ public class ActivityMain extends Activity
         // Henter nødvendige data
         kart = new FragmentMap();
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
-        transaksjon.replace(R.id.mapFragmentContainer, kart);
+        transaksjon.replace(R.id.kartFragmentHolder, kart);
 
         // Legger ved koordinater som skal vises i kartet:
         if (koordinater != null)
@@ -279,6 +308,28 @@ public class ActivityMain extends Activity
     }
 
     /**
+     * Endrer vektingen av de to panelene vist. Disse skal være fokusert på der det er mest
+     * viktig informasjon.
+     * @param vekt som skal settes på bunn-panelet.
+     */
+    public void skalerPanelVekting(float vekt)
+    {
+        // Skalerer bunnpanelet til oppgitt vekt:
+        LinearLayout.LayoutParams param = (LinearLayout.LayoutParams) bunnPanel.getLayoutParams();
+        param.weight = vekt;
+        bunnPanel.setLayoutParams(param);
+
+        // Skalerer kartpanel til Kompliment av vekting:
+        LinearLayout.LayoutParams kartParam = (LinearLayout.LayoutParams) kartPanel.getLayoutParams();
+        kartParam.weight = (1-vekt);
+        kartPanel.setLayoutParams(kartParam);
+    }
+
+    //---------------------------------------------------------------
+    //      Metoder som Lokasjonshåndtering og destinasjoner
+    //---------------------------------------------------------------
+
+    /**
      * @return Enhetens lokasjon
      */
     public LatLng getEnhetensPosisjon()
@@ -287,14 +338,6 @@ public class ActivityMain extends Activity
             return enhetensPosisjon;
         else
             return HOYSKOLEN;
-    }
-
-    /**
-     * @return destinasjonsobjektet
-     */
-    public ArrayList<Destinasjon> getDestinasjoner()
-    {
-        return destinasjoner;
     }
 
     /**
@@ -324,6 +367,7 @@ public class ActivityMain extends Activity
             if (destinasjon.compareTo(andre) < 0)
             {
                 destinasjoner.add(i, destinasjon);
+                return;
             }
         }
     }
@@ -401,21 +445,35 @@ public class ActivityMain extends Activity
     /**
      * "Eventhandeler" for min lokasjon knappen. Flytter kartet til min
      * lokasjon.
-     * @param view
      */
-    public void gåTilLokasjon(View view)
+    public void gåTilLokasjon()
     {
         kart.oppdaterBrukerPosisjon(getEnhetensPosisjon());
     }
 
     /**
      * "Eventhandeler" for legg til knapp.
+     * Denne kontrollerer om bruker er klar for å legge til lokasjon.
+     * Dette krever brukerdata og lokasjonsdata.
      * @param view
      */
     public void leggTilLokasjon(View view)
     {
-        FloatingActionButton fab = (FloatingActionButton)view;
+        FloatingActionButton fab = (FloatingActionButton) view;
 
+        if (bruker == null)
+        {
+            Snackbar.make(view, "Ingen registrert bruker.", Snackbar.LENGTH_INDEFINITE)
+                    .setAction("REGISTRER", new View.OnClickListener()
+                    {
+                        @Override
+                        public void onClick(View v)
+                        {visInnstillinger();
+                        }
+                    })
+                    .show();
+            return;
+        }
         if (lokasjon == null)
         {
             Snackbar.make(view, "Kan ikke legge til uten enhetens lokasjon.", Snackbar.LENGTH_SHORT).show();
@@ -425,14 +483,6 @@ public class ActivityMain extends Activity
         fab.setVisibility(View.GONE);
         skalerPanelVekting(0.8f);
         visLeggTilLokasjon();
-    }
-
-    /**
-     * @return Legg til knappens objekt. (FAB)
-     */
-    public FloatingActionButton getLeggTilKnapp()
-    {
-        return leggTilKnapp;
     }
 
     /**
@@ -449,10 +499,124 @@ public class ActivityMain extends Activity
         return (networkInfo != null && networkInfo.isConnected());
     }
 
-    //---------------------------------------------
-    //  FØLGENDE ER KOPI FRA LEKSJON 12B.
-    //  Modifisert for å passe applikasjonen.
-    //---------------------------------------------
+    //---------------------------------------------------------------
+    //      Metoder som hører med Oppsett
+    //---------------------------------------------------------------
+
+    /**
+     * Lager en bruker ut ifra "sharedpreferences". Hvis ingen bruker
+     * er registrert vil brukeren bli satt til NULL.
+     */
+    public void brukerOppsett()
+    {
+        SharedPreferences preferences = getSharedPreferences(INNSTILLINGER_BRUKER, MODE_PRIVATE);
+
+        if (! preferences.contains("epost"))
+        {
+            bruker = null;
+        }
+        else {
+            bruker = new Bruker(
+                    preferences.getString("email", ""),
+                    preferences.getString("firstName", ""),
+                    preferences.getString("lastName", "")
+            );
+        }
+    }
+
+    /**
+     * Setter opp menyen
+     * @param menu
+     * @return
+     */
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menyView = getMenuInflater();
+        menyView.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    /**
+     * Setter opp animasjon for bruk ved skiftende vindustørrelser.
+     */
+    public void animasjonsOppsett()
+    {
+        // Setter animasjon på panelene:
+        bunnPanel = (LinearLayout) findViewById(R.id.ListeFragmentHolder);
+        kartPanel = (LinearLayout) findViewById(R.id.kartFragmentHolder);
+        LayoutTransition overgang = new LayoutTransition();
+        overgang.enableTransitionType(LayoutTransition.CHANGING);
+        overgang.disableTransitionType(LayoutTransition.APPEARING);
+        overgang.disableTransitionType(LayoutTransition.DISAPPEARING);
+        overgang.disableTransitionType(LayoutTransition.CHANGE_APPEARING);
+        overgang.disableTransitionType(LayoutTransition.CHANGE_DISAPPEARING);
+        overgang.setDuration(400);
+        bunnPanel.setLayoutTransition(overgang);
+        kartPanel.setLayoutTransition(overgang);
+    }
+
+    /**
+     * "Event handeler" for når menyen blir brukt.
+     * @param valgt oppføring i menyen
+     * @return
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem valgt) {
+        // Håndtere knappeklikk fra bruker:
+        switch (valgt.getItemId()) {
+            case R.id.innstillinger:
+                visInnstillinger();
+                return true;
+            case R.id.oppdaterLokasjon:
+                gåTilLokasjon();
+                return true;
+            default:
+                return super.onOptionsItemSelected(valgt);
+        }
+    }
+
+
+    //---------------------------------------------------------------
+    //      SETTERS OG GETTERS:
+    //---------------------------------------------------------------
+
+    /**
+     * @param detaljinfoVises
+     */
+    public void setDetaljinfoVises(boolean detaljinfoVises)
+    {
+        this.detaljinfoVises = detaljinfoVises;
+    }
+
+    /**
+     * @return Alle destinasjonsobjekter i form av ArrayList<Destinasjon>
+     */
+    public ArrayList<Destinasjon> getDestinasjoner()
+    {
+        return destinasjoner;
+    }
+
+
+    /**
+     * @return ferdig konfigurert kart.
+     */
+    public FragmentMap getKart()
+    {
+        return kart;
+    }
+
+    /**
+     * @return Legg til knappens objekt. (FAB)
+     */
+    public FloatingActionButton getLeggTilKnapp()
+    {
+        return leggTilKnapp;
+    }
+
+
+    //---------------------------------------------------------------
+    //      FØLGENDE ER KOPI FRA LEKSJON 12B.
+    //      Modifisert for å passe applikasjonen.
+    //---------------------------------------------------------------
 
     public final static int REQUEST_LOCATION = 1;
 
@@ -521,11 +685,5 @@ public class ActivityMain extends Activity
                         "Kan ikke vise posisjon uten tillatelse", Snackbar.LENGTH_LONG).show();
             }
         }
-    }
-
-
-    public void setDetaljinfoVises(boolean detaljinfoVises)
-    {
-        this.detaljinfoVises = detaljinfoVises;
     }
 }

@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    Fargekoder laget med Googles verktøy for kombinering av
+    farger:
+    https://material.io/color/#!/?view.left=0&view.right=0&primary.color=81D4FA&secondary.color=FF5252&primary.text.color=000000
+
+-->
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorPrimary">#81d4fa</color>
+    <color name="colorPrimaryDark">#4ba3c7</color>
+    <color name="colorPrimaryLight">#b6ffff</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="colorAccentDark">#c50e29</color>
+    <color name="colorAccentLight">#ff867f</color>
     <color name="colorOverlayTint">#c2000000</color>
     <color name="colorWhiteText">#f3ffffff</color>
 </resources>

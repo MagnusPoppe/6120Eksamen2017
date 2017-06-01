@@ -43,8 +43,8 @@ public class FragmentCloseLocationList extends Fragment
     public void onResume()
     {
         super.onResume();
-        ActivityMain aktivitet = (ActivityMain) getActivity();
-        aktivitet.skalerPanelVekting(0.4f);
+        ActivityController aktivitet = (ActivityController) getActivity();
+        aktivitet.skalerPanelVekting(.4f);
         aktivitet.getLeggTilKnapp().setVisibility(View.VISIBLE);
     }
 
@@ -52,7 +52,7 @@ public class FragmentCloseLocationList extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
-        final ActivityMain aktivitet = (ActivityMain) getActivity();
+        final ActivityController aktivitet = (ActivityController) getActivity();
 
         View view = inflater.inflate(R.layout.fragment_close_location_list, container, false);
 
@@ -70,14 +70,10 @@ public class FragmentCloseLocationList extends Fragment
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
-                // Bundle item = new Bundle();
-                // item.putInt(SELECTED_DESTINATION, position);
-                aktivitet.flyttTilOgMarker(
-                        destinasjoner.get(position),
-                        destinasjoner.get(position).getKoordinat()
-                );
-
-                aktivitet.skalerPanelVekting(0.6f);
+                // Markerer kartet og flytter kamera:
+                Destinasjon destinasjon = destinasjoner.get(position);
+                aktivitet.getKart().flyttKameraTil(destinasjon.getKoordinat());
+                aktivitet.getKart().markerKartet(destinasjon, destinasjon.getKoordinat());
                 aktivitet.visDetaljertInformasjonsPanel(position);
             }
         });

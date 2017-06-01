@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Turmål app</string>
+    <string name="app_name">Turmål - Eksamen 2017</string>
 
     <!-- Feilmeldinger: -->
     <string name="error">Noe gikk galt!</string>
@@ -9,8 +9,4 @@
     <string name="markedBy">Markert av:</string>
     <string name="metersAboveSeaLevel">M.O.H.</string>
     <string name="perimissionDialog">Åpne tillateses dialog</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
 </resources>

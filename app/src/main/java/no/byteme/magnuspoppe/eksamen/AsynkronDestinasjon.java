@@ -25,9 +25,9 @@ import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
 public class AsynkronDestinasjon
 {
     private final String GRUNN_URL = "http://itfag.usn.no/~210852/api.php/destination/";
-    ActivityMain aktivitet;
+    ActivityController aktivitet;
 
-    public AsynkronDestinasjon(ActivityMain activity)
+    public AsynkronDestinasjon(ActivityController activity)
     {
         this.aktivitet = activity;
     }
@@ -52,6 +52,16 @@ public class AsynkronDestinasjon
     {
         DestinasjonsOppgave oppgave = new DestinasjonsOppgave();
         oppgave.execute(GRUNN_URL, "POST", destinasjon.toJSON());
+    }
+
+    public void post(Destinasjon[] destinasjoner)
+    {
+        StringBuilder json = new StringBuilder("[");
+        for (Destinasjon destinasjon : destinasjoner)
+        {
+            json.append(destinasjon.toJSON());
+        }
+        json.append("]");
     }
 
     private class DestinasjonsOppgave extends AsyncTask<String, Void, Long>

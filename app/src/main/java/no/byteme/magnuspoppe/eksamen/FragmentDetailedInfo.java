@@ -25,7 +25,7 @@ import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
 public class FragmentDetailedInfo extends Fragment
 {
 
-    ActivityMain aktivitet;
+    ActivityController aktivitet;
     ImageView detaljbilde;
 
     public FragmentDetailedInfo()
@@ -39,7 +39,7 @@ public class FragmentDetailedInfo extends Fragment
     {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_detailed_info, container, false);
-        aktivitet = (ActivityMain) getActivity();
+        aktivitet = (ActivityController) getActivity();
 
         Bundle args = getArguments();
         if (args == null)
@@ -70,6 +70,9 @@ public class FragmentDetailedInfo extends Fragment
             DownloadImageTask task = new DownloadImageTask();
             task.execute(destinasjon.getBildeURL());
         }
+
+        // TODO: Åpne intent for å vise i google maps + knapp for å aktivere.
+
         return view;
     }
 
@@ -81,7 +84,7 @@ public class FragmentDetailedInfo extends Fragment
     public void onResume()
     {
         super.onResume();
-        ActivityMain aktivitet = (ActivityMain) getActivity();
+        ActivityController aktivitet = (ActivityController) getActivity();
         aktivitet.setDetaljinfoVises(true);
     }
 
@@ -93,7 +96,7 @@ public class FragmentDetailedInfo extends Fragment
     public void onPause()
     {
         super.onPause();
-        ActivityMain aktivitet = (ActivityMain) getActivity();
+        ActivityController aktivitet = (ActivityController) getActivity();
         aktivitet.setDetaljinfoVises(false);
     }
 

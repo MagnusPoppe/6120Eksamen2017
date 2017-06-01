@@ -12,12 +12,14 @@ public class Bruker
     private String epost;
     private String fornavn;
     private String etternavn;
-    private int alder;
+
     ArrayList<Destinasjon> userLocations;
 
-    public Bruker(String JsonData)
+    public Bruker(String epost, String fornavn, String etternavn)
     {
-
+        this.epost = epost;
+        this.fornavn = fornavn;
+        this.etternavn = etternavn;
     }
 
     public String getEpost()
@@ -50,13 +52,4 @@ public class Bruker
         this.etternavn = etternavn;
     }
 
-    public int getAlder()
-    {
-        return alder;
-    }
-
-    public void setAlder(int alder)
-    {
-        this.alder = alder;
-    }
 }
