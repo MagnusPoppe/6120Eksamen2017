@@ -47,8 +47,8 @@ public class ActivityController extends Activity
     // Konstanter
     public static final String HOVED_LATITIUDE = "kldaføjsefølakjdf";
     public static final String HOVED_LONGITUDE = "asløkdsalskdjfkal";
-    private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 978123;
-    private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 987122;
+    private static final String DESTINASJONSLISTE = "jlkd";
+
     private static final LatLng HOYSKOLEN = new LatLng(59.408852, 9.059512);
     public static final String INNSTILLINGER = "no.byteme.magnuspoppe.eksamen.preferences";
     public static final String FOTO_LAGER="images";
@@ -94,10 +94,19 @@ public class ActivityController extends Activity
         leggTilKnapp = (FloatingActionButton) findViewById(R.id.leggTil);
         animasjonsOppsett();
 
-        // Henter ut destinasjonsdata asynkront:
-        destinasjoner = new ArrayList<>();
         db = new DestinasjonDB(getApplicationContext());
-        oppdaterDatasett();
+
+        if(savedInstanceState == null || !savedInstanceState.containsKey(DESTINASJONSLISTE))
+        {
+            // Henter ut destinasjonsdata asynkront:
+            destinasjoner = new ArrayList<>();
+            oppdaterDatasett();
+        }
+        else // Inneholder lagrede objekter:
+        {
+            destinasjoner = savedInstanceState.getParcelableArrayList(DESTINASJONSLISTE);
+            oppdaterDatasett();
+        }
 
         // Lager Google API Klient objekt:
         if (mGoogleApiClient == null) {
@@ -136,6 +145,13 @@ public class ActivityController extends Activity
         db.close();
 
         super.onStop();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState)
+    {
+        outState.putParcelableArrayList(DESTINASJONSLISTE, destinasjoner);
+        super.onSaveInstanceState(outState);
     }
 
     //---------------------------------------------------------------

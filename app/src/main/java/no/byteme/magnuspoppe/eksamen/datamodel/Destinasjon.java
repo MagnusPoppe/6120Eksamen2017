@@ -1,5 +1,7 @@
 package no.byteme.magnuspoppe.eksamen.datamodel;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -10,7 +12,7 @@ import org.json.JSONObject;
  * Created by MagnusPoppe on 29/05/2017.
  */
 
-public class Destinasjon implements Comparable
+public class Destinasjon implements Comparable, Parcelable
 {
     private int databaseID;
     private String eier;
@@ -98,6 +100,19 @@ public class Destinasjon implements Comparable
 
         // Disse kommer fra nett
         iGlobalDatabase = true;
+    }
+
+    public Destinasjon(Parcel in)
+    {
+        databaseID = in.readInt();
+        eier = in.readString();
+        navn = in.readString();
+        type = in.readString();
+        beskrivelse = in.readString();
+        bildeURL = in.readString();
+        latitude = in.readDouble();
+        longitude = in.readDouble();
+        moh = in.readInt();
     }
 
     @Override
@@ -217,4 +232,42 @@ public class Destinasjon implements Comparable
     {
         this.bildeURL = bildeURL;
     }
+
+    @Override
+    public int describeContents()
+    {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeInt(databaseID);
+        dest.writeString(eier);
+        dest.writeString(navn);
+        dest.writeString(type);
+        dest.writeString(beskrivelse);
+        dest.writeString(bildeURL);
+        dest.writeDouble(latitude);
+        dest.writeDouble(longitude);
+        dest.writeInt(moh);
+        dest.writeBooleanArray(new boolean[]{isiGlobalDatabase()});
+    }
+
+    /**
+     * Mønster på hvordan lagre ArrayList<> av generisk type til parcel for
+     * at objektene skal overleve rotasjon.
+     *
+     * Lenke til inspirasjonskilde:
+     * https://stackoverflow.com/questions/12503836/how-to-save-custom-arraylist-on-android-screen-rotate
+     */
+    public static final Parcelable.Creator<Destinasjon> CREATOR = new Parcelable.Creator<Destinasjon>() {
+        public Destinasjon createFromParcel(Parcel in) {
+            return new Destinasjon(in);
+        }
+
+        public Destinasjon[] newArray(int size) {
+            return new Destinasjon[size];
+        }
+    };
 }
