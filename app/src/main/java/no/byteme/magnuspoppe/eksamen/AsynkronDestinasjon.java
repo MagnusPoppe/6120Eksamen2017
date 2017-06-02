@@ -25,11 +25,16 @@ import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
 public class AsynkronDestinasjon
 {
     private final String GRUNN_URL = "http://itfag.usn.no/~210852/api.php/destination/";
+
+    private boolean utførSlettingEtterOpplasting;
+    private int[] skalSlettes;
+
     ActivityController aktivitet;
 
     public AsynkronDestinasjon(ActivityController activity)
     {
         this.aktivitet = activity;
+        this.utførSlettingEtterOpplasting = false;
     }
 
     public void get()
@@ -57,17 +62,36 @@ public class AsynkronDestinasjon
     public void post(Destinasjon[] destinasjoner)
     {
         StringBuilder json = new StringBuilder("[");
-        for (Destinasjon destinasjon : destinasjoner)
+        for (int i = 0; i < destinasjoner.length; i++)
         {
-            json.append(destinasjon.toJSON());
+            json.append(destinasjoner[i].toJSON());
+            if (i < destinasjoner.length-1) json.append(",");
         }
         json.append("]");
+        DestinasjonsOppgave oppgave = new DestinasjonsOppgave();
+        oppgave.execute(GRUNN_URL, "POST", json.toString());
+    }
+
+    public void postUopplastet(Destinasjon[] destinasjoner)
+    {
+        // Setter variabel for utføring av callback:
+        utførSlettingEtterOpplasting = true;
+
+        // Lagrer IDer på rader som skal slettes lokalt:
+        skalSlettes = new int[destinasjoner.length];
+        for (int i = 0; i < destinasjoner.length; i++)
+        {
+            skalSlettes[i] = destinasjoner[i].getDatabaseID();
+        }
+
+        // Utfører opplasting:
+        post(destinasjoner);
     }
 
     private class DestinasjonsOppgave extends AsyncTask<String, Void, Long>
     {
 
-        // HTTP statuscodes:
+        // PARAMS:
         final static int URL = 0;
         final static int HTTP_METODE = 1;
         final static int PAKKE = 2;
@@ -191,6 +215,11 @@ public class AsynkronDestinasjon
             if (resultat == OK)
             {
                 status = "Executed rest call successfully.";
+
+                // Utfører callback hvis nødvendig:
+                if (utførSlettingEtterOpplasting)
+                    aktivitet.vedKomplettOpplastingAvDestinasjoner(skalSlettes);
+
             } else if (resultat == FEILFORMATERT_URL_FEIL)
             {
                 status = "Bad url...";

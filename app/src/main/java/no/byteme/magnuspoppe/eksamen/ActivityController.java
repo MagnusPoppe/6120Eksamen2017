@@ -10,6 +10,7 @@ import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -39,7 +40,8 @@ import no.byteme.magnuspoppe.eksamen.datamodel.DestinasjonDB;
  */
 public class ActivityController extends Activity
         implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener
+        GoogleApiClient.OnConnectionFailedListener,
+        mellomLagerKontrakt
 {
 
     // Konstanter
@@ -48,8 +50,8 @@ public class ActivityController extends Activity
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 978123;
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 987122;
     private static final LatLng HOYSKOLEN = new LatLng(59.408852, 9.059512);
-    public static final String INNSTILLINGER_BRUKER = "no.byteme.magnuspoppe.eksamen.preferences";
-
+    public static final String INNSTILLINGER = "no.byteme.magnuspoppe.eksamen.preferences";
+    public static final String FOTO_LAGER="images";
     // "STATE":
     private boolean detaljinfoVises;
 
@@ -70,6 +72,7 @@ public class ActivityController extends Activity
     // Datamodell:
     private Bruker bruker;
     private ArrayList<Destinasjon> destinasjoner;
+
     private DestinasjonDB db;
 
     //---------------------------------------------------------------
@@ -94,13 +97,7 @@ public class ActivityController extends Activity
         // Henter ut destinasjonsdata asynkront:
         destinasjoner = new ArrayList<>();
         db = new DestinasjonDB(getApplicationContext());
-
-        // Henter ut datasett:
-        if (enhetPåNett())
-        {
-            AsynkronDestinasjon oppgave = new AsynkronDestinasjon(this);
-            oppgave.get();
-        }
+        oppdaterDatasett();
 
         // Lager Google API Klient objekt:
         if (mGoogleApiClient == null) {
@@ -121,21 +118,12 @@ public class ActivityController extends Activity
     protected void onStart()
     {
         super.onStart();
+
         // Connect the ApiClient to Google Services
         mGoogleApiClient.connect();
 
         // Kobler til DB:
         db.open();
-
-        if (enhetPåNett())
-        {
-            Destinasjon[] uopplastet = db.getAlleDestinasjoner();
-            if (uopplastet != null)
-            {
-                AsynkronDestinasjon asynk = new AsynkronDestinasjon(this);
-                asynk.post(uopplastet);
-            }
-        }
     }
 
     @Override
@@ -157,8 +145,11 @@ public class ActivityController extends Activity
     /**
      * Lager og viser innstillingsvindu.
      */
-    private void visInnstillinger()
+    protected void visInnstillinger()
     {
+        // Skjuler "legg til" knapp (blir satt tilbake når listen vises igjen):
+        getLeggTilKnapp().setVisibility(View.GONE);
+
         visInnstillingPanel(true);
         Preferences innstillingFragment = new Preferences();
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
@@ -208,10 +199,17 @@ public class ActivityController extends Activity
         // se listen. Vi fjerner derfor et lag om vi allerede viser detaljinfo vinduet
         // når et nytt hentes inn.
         if (detaljinfoVises)
+        {
             getFragmentManager().popBackStack();
 
+            // Skjuler "legg til" knapp (blir satt tilbake når listen vises igjen):
+            getLeggTilKnapp().setVisibility(View.GONE);
+        }
+
+
+
         // Skalerer om vindu for å flytte brukerens fokus:
-        skalerPanelVekting(getResources().getDimension(R.dimen.largePanel));
+        skalerPanelVekting(0.6f);
 
         // Plasserer ut listen:
         FragmentDetailedInfo detaljinfo = new FragmentDetailedInfo();
@@ -256,6 +254,7 @@ public class ActivityController extends Activity
             Snackbar.make(this.getCurrentFocus(), "Lokasjon ikke enda funnet.", Snackbar.LENGTH_SHORT).show();
             return;
         }
+
         // Plasserer ut legg-til panlet:
         FragmentAddLocation leggTil = new FragmentAddLocation();
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
@@ -326,6 +325,64 @@ public class ActivityController extends Activity
     }
 
     //---------------------------------------------------------------
+    //      Database operasjoner:
+    //---------------------------------------------------------------
+
+    /**
+     * Oppdaterer datasettet for appen.
+     */
+    private void oppdaterDatasett()
+    {
+        // Henter ut datasett:
+        if (enhetPåNett())
+        {
+            AsynkronDestinasjon oppgave = new AsynkronDestinasjon(this);
+            oppgave.get();
+        }
+    }
+
+    /**
+     * Gjør spørring mot lokal database for å se om det er oppføringer
+     * i databasen som ikke finnes på nett. Hvis finnes, skal de lastes opp,
+     * så slettes lokalt. Slettingen gjøres ved CallBack.
+     * Callback metode: ActivityController.vedKomplettOpplastingAvDestinasjoner()
+     */
+    protected void lastOppMidlertidigLagret()
+    {
+        if (enhetPåNett())
+        {
+            Destinasjon[] uopplastet = db.getAlleUopplastedeDestinasjoner();
+
+            // Hvis det var svar i resultatet:
+            if (uopplastet != null)
+            {
+                // Starter asynkron oppgave for å laste opp destinasjoner:
+                AsynkronDestinasjon asynk = new AsynkronDestinasjon(this);
+                asynk.postUopplastet(uopplastet);
+            }
+        }
+    }
+
+    /**
+     * Callback for når uoplastende lokalt lagrede elementer har
+     * blitt lastet opp til den globale databasen.
+     * @param ider på de opplastede elementene.
+     */
+    public void vedKomplettOpplastingAvDestinasjoner(int[] ider)
+    {
+        // Sletter de nødvendige oppføringene:
+        db.deleteDestinasjon(ider);
+
+        // Informer bruker:
+        if( getCurrentFocus()!=null)
+            Snackbar.make(getCurrentFocus(), "Turmål er publisert til tjener!",
+                    Snackbar.LENGTH_SHORT).show();
+
+        // Oppdaterer datasettet med nye oppføringer.
+        oppdaterDatasett();
+    }
+
+    //---------------------------------------------------------------
     //      Metoder som Lokasjonshåndtering og destinasjoner
     //---------------------------------------------------------------
 
@@ -379,8 +436,8 @@ public class ActivityController extends Activity
     public void setDestinasjoner(ArrayList<Destinasjon> destinasjoner)
     {
         // Rydder vekk alle markører på kartet:
-        if (kart != null)
-            kart.fjernAlleMarkorer();
+        // if (kart != null)
+        //     kart.fjernAlleMarkorer();
 
         // Setter og sorterer ny tabell:
         this.destinasjoner = destinasjoner;
@@ -393,8 +450,11 @@ public class ActivityController extends Activity
     public void settUtAlleMarkorer()
     {
         if (kart != null)
-            for(Destinasjon destinasjon : destinasjoner)
+        {
+            kart.fjernAlleMarkorer();
+            for (Destinasjon destinasjon : destinasjoner)
                 kart.markerKartet(destinasjon, destinasjon.getKoordinat());
+        }
     }
 
     /**
@@ -434,8 +494,8 @@ public class ActivityController extends Activity
         for( Destinasjon destinasjon : sorterbar )
             destinasjoner.add(destinasjon);
 
-        // Oppdaterer view
-        if (destinasjonsliste != null)
+        // Oppdaterer view hvis på hovedthread.
+        if (destinasjonsliste != null && Looper.myLooper() == Looper.getMainLooper())
         {
             destinasjonsliste.oppdaterListen();
             settUtAlleMarkorer();
@@ -474,6 +534,19 @@ public class ActivityController extends Activity
                     .show();
             return;
         }
+        if (! bruker.harKorrektEpost())
+        {
+            Snackbar.make(view, "Feil format på E-Post.", Snackbar.LENGTH_INDEFINITE)
+                    .setAction("REGISTRER", new View.OnClickListener()
+                    {
+                        @Override
+                        public void onClick(View v)
+                        {visInnstillinger();
+                        }
+                    })
+                    .show();
+            return;
+        }
         if (lokasjon == null)
         {
             Snackbar.make(view, "Kan ikke legge til uten enhetens lokasjon.", Snackbar.LENGTH_SHORT).show();
@@ -483,20 +556,6 @@ public class ActivityController extends Activity
         fab.setVisibility(View.GONE);
         skalerPanelVekting(0.8f);
         visLeggTilLokasjon();
-    }
-
-    /**
-     * Sjekker om enheten er koblet til internett. Dette gjøres for
-     * å unngå feil ved asynkrone oppgaver.
-     * @return true hvis internett, false hvis ikke.
-     */
-    public boolean enhetPåNett()
-    {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(
-                Activity.CONNECTIVITY_SERVICE
-        );
-        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-        return (networkInfo != null && networkInfo.isConnected());
     }
 
     //---------------------------------------------------------------
@@ -509,7 +568,7 @@ public class ActivityController extends Activity
      */
     public void brukerOppsett()
     {
-        SharedPreferences preferences = getSharedPreferences(INNSTILLINGER_BRUKER, MODE_PRIVATE);
+        SharedPreferences preferences = getSharedPreferences(INNSTILLINGER, MODE_PRIVATE);
 
         if (preferences.contains("email"))
         {
@@ -529,7 +588,8 @@ public class ActivityController extends Activity
      * @param menu
      * @return
      */
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
         MenuInflater menyView = getMenuInflater();
         menyView.inflate(R.menu.main_menu, menu);
         return true;
@@ -568,6 +628,10 @@ public class ActivityController extends Activity
                 return true;
             case R.id.oppdaterLokasjon:
                 gåTilLokasjon();
+                return true;
+            case R.id.oppdaterDestinasjoner:
+                oppdaterDatasett();
+                lastOppMidlertidigLagret();
                 return true;
             default:
                 return super.onOptionsItemSelected(valgt);
@@ -611,6 +675,31 @@ public class ActivityController extends Activity
         return leggTilKnapp;
     }
 
+    /**
+     * @return Databaseobjekt for bruk av SQLite database.
+     */
+    public DestinasjonDB getDB()
+    {
+        return db;
+    }
+
+    //---------------------------------------------------------------
+    //      Metoder for status av telefonen (lokasjon og nett)
+    //---------------------------------------------------------------
+
+    /**
+     * Sjekker om enheten er koblet til internett. Dette gjøres for
+     * å unngå feil ved asynkrone oppgaver.
+     * @return true hvis internett, false hvis ikke.
+     */
+    public boolean enhetPåNett()
+    {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(
+                Activity.CONNECTIVITY_SERVICE
+        );
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+        return (networkInfo != null && networkInfo.isConnected());
+    }
 
     //---------------------------------------------------------------
     //      FØLGENDE ER KOPI FRA LEKSJON 12B.

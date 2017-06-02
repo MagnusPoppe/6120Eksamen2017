@@ -26,11 +26,12 @@ public class DestinasjonDB
 
     private static final String DATABASE_NAVN = "db210852.db";
     private static final String TABELL_NAVN = "location";
-    private static final int VERSJON = 1;
+    private static final int VERSJON = 2;
     private final Context context;
     public static String TAG = DestinasjonDB.class.getSimpleName();
 
     // NAVN PÅ KOLONNER:
+    final static private String KOL_ID  = "locationID";
     final static private String KOL_EIER = "owner";
     final static private String KOL_NAVN = "name";
     final static private String KOL_TYPE = "type";
@@ -39,6 +40,7 @@ public class DestinasjonDB
     final static private String KOL_LAT = "lat";
     final static private String KOL_LNG = "lng";
     final static private String KOL_MOH = "moh";
+    final static private String KOL_GLOBAL = "isGlobal";
 
     private DatabaseHelper dbHjelp;
     SQLiteDatabase DB;
@@ -85,7 +87,32 @@ public class DestinasjonDB
         verdier.put(KOL_LAT, destinasjon.getKoordinat().latitude);
         verdier.put(KOL_LNG, destinasjon.getKoordinat().longitude);
         verdier.put(KOL_MOH, destinasjon.getMoh());
+        verdier.put(KOL_GLOBAL, destinasjon.isiGlobalDatabase());
         destinasjon.setDatabaseID((int) DB.insert(TABELL_NAVN, null, verdier));
+    }
+
+    /**
+     * Sletter mange oppføringer i databasen sekvensielt.
+     * @param ider på oppføringer, tilsvarer kolonnen "locationID
+     */
+    public void deleteDestinasjon(int[] ider)
+    {
+        for (int id: ider)
+            deleteDestinasjon(id);
+    }
+
+    /**
+     * Sletter en enkel oppføring i databasen hvis oppføringen finnes.
+     * @param id på oppføring, tilsvarer kolonnen "locationID
+     */
+    public void deleteDestinasjon(Integer id)
+    {
+        // Spesifiserer SELECT og WHERE:
+        String selection =  KOL_ID + " = ?";
+        String[] selectionArgs = { id.toString() };
+
+        // Utfører spørring:
+        DB.delete(TABELL_NAVN, selection, selectionArgs);
     }
 
     /**
@@ -99,8 +126,9 @@ public class DestinasjonDB
 
         // Definerer kolonner jeg ønsker utog annet viktig:
         String[] resultatKolonner = {
+                KOL_ID,                                                      // INT ID
                 KOL_EIER, KOL_NAVN, KOL_TYPE, KOL_BESKRIVELSE, KOL_BILDEURL, // Streng kolonner
-                KOL_LAT, KOL_LNG, KOL_MOH                                    // Andre verdier
+                KOL_LAT, KOL_LNG, KOL_MOH, KOL_GLOBAL                        // Andre verdier
         };
         String whereSetning = null;
         String[] whereArgumenter = null;
@@ -119,6 +147,52 @@ public class DestinasjonDB
                 sortering
         );
 
+        return spørringDestinasjoner(cursor);
+    }
+
+    /**
+     * Henter ut alle destinasjoner lagret i databasen og pakker
+     * dem inn i objekter.
+     * @return Tabell med destinasjonsobjekter eller NULL hvis databasen er tom.
+     */
+    public Destinasjon[] getAlleUopplastedeDestinasjoner()
+    {
+        SQLiteDatabase db = dbHjelp.getReadableDatabase();
+
+        // Definerer kolonner jeg ønsker utog annet viktig:
+        String[] resultatKolonner = {
+                KOL_ID,                                                      // INT ID
+                KOL_EIER, KOL_NAVN, KOL_TYPE, KOL_BESKRIVELSE, KOL_BILDEURL, // Streng kolonner
+                KOL_LAT, KOL_LNG, KOL_MOH, KOL_GLOBAL                        // Andre verdier
+        };
+        String whereSetning = KOL_GLOBAL + " = 0";
+        String[] whereArgumenter = null;
+        String gruppering = null;
+        String havingSetning = null;
+        String sortering = null;
+
+        // Utfører spørring:
+        Cursor cursor = db.query(
+                TABELL_NAVN,
+                resultatKolonner,
+                whereSetning,
+                whereArgumenter,
+                gruppering,
+                havingSetning,
+                sortering
+        );
+
+        return spørringDestinasjoner(cursor);
+    }
+
+    /**
+     * Utfører en spørring for en ferdigkonfigurert cursor. Denne er den
+     * generelle spørringsmetoden for "location" tabellen.
+     * @param cursor Ferdig konfigurert for spørringen.
+     * @return Resultat, eller null hvis ingen resultat.
+     */
+    private Destinasjon[] spørringDestinasjoner(Cursor cursor)
+    {
         int antallOppføringer = cursor.getCount();
 
         // Ingen oppføringer i database:
@@ -131,16 +205,20 @@ public class DestinasjonDB
         // Henter ut data og gjør det om til objekter:
         while (cursor.moveToNext())
         {
-            destinasjoner[i++] = new Destinasjon(
-                    cursor.getString(0),    // Eier
-                    cursor.getString(1),    // Navn
-                    cursor.getString(2),    // Type
-                    cursor.getString(3),    // Beskrivelse
-                    cursor.getString(4),    // Bilde URL
-                    cursor.getDouble(5),    // Latitude
-                    cursor.getDouble(6),    // Longitude
-                    cursor.getInt(7)        // Meter over havet (MOH)
+            destinasjoner[i] = new Destinasjon(
+                    cursor.getInt(0),       // ID
+                    cursor.getString(1),    // Eier
+                    cursor.getString(2),    // Navn
+                    cursor.getString(3),    // Type
+                    cursor.getString(4),    // Beskrivelse
+                    cursor.getString(5),    // Bilde URL
+                    cursor.getDouble(6),    // Latitude
+                    cursor.getDouble(7),    // Longitude
+                    cursor.getInt(8)        // Meter over havet (MOH)
             );
+            destinasjoner[i].setiGlobalDatabase(cursor.getInt(9) > 0);
+
+            i++;
         }
 
         // Ferdigstiller spørring:
@@ -175,6 +253,7 @@ public class DestinasjonDB
             "  `imageURL` VARCHAR(256) NULL,\n" +
             "  `lat` DOUBLE NULL,\n" +
             "  `lng` DOUBLE NULL,\n" +
-            "  `moh` INT NULL\n" +
+            "  `moh` INT NULL,\n" +
+            " `isGlobal` BOOLEAN"+
             ")\n";
 }

@@ -2,7 +2,6 @@ package no.byteme.magnuspoppe.eksamen;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.EditTextPreference;
 import android.preference.PreferenceFragment;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -61,7 +60,7 @@ public class Preferences extends PreferenceFragment implements SharedPreferences
         ActivityController aktivitet = (ActivityController) getActivity();
 
         SharedPreferences preferences =
-                aktivitet.getSharedPreferences(ActivityController.INNSTILLINGER_BRUKER, 0);
+                aktivitet.getSharedPreferences(ActivityController.INNSTILLINGER, 0);
 
         SharedPreferences.Editor editor = preferences.edit();
 

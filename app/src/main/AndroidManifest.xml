@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -16,8 +18,27 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
+        <!--
+        For å lese inn høyoppløslige bildefiler:
+        Mønster hentet fra android API fileprovider:
+        https://developer.android.com/reference/android/support/v4/content/FileProvider.html
+        -->
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="no.byteme.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/paths" />
+        </provider>
+
+        <!-- Google Maps API nøkkel: -->
         <meta-data android:name="com.google.android.geo.API_KEY"
                    android:value="AIzaSyAx9aILxzRlmwMnVSNMmnL4b2CZ6-F1JwE"/>
+
+
         <activity android:name=".ActivityController">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

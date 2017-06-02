@@ -3,7 +3,6 @@
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              tools:context="no.byteme.magnuspoppe.eksamen.FragmentAddLocation"
-
              android:padding="@dimen/defaultPadding">
 
     <LinearLayout
@@ -55,7 +54,6 @@
             android:textSize="@dimen/largeText"
             android:textAppearance="@android:style/TextAppearance.Material.Caption"/>
 
-
         <TableLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -64,11 +62,21 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:text="Brukernavn"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/legg_til_eier"/>
+            </TableRow>
+            <TableRow android:padding="6dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:text="Latitude"/>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/add_lat"/>
+                    android:id="@+id/legg_til_lat"/>
             </TableRow >
             <TableRow android:padding="6dp">
                 <TextView
@@ -78,7 +86,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/add_lng"/>
+                    android:id="@+id/legg_til_lng"/>
             </TableRow>
             <TableRow android:padding="6dp">
                 <TextView
@@ -88,9 +96,16 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/add_moh"/>
+                    android:id="@+id/legg_til_moh"/>
             </TableRow>
         </TableLayout>
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@color/colorPrimaryDark"
+            android:id="@+id/innBilde"/>
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

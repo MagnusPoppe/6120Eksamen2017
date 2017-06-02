@@ -7,6 +7,11 @@
         android:icon="@drawable/ic_my_location"
         app:showAsAction="ifRoom"/>
     <item
+        android:id="@+id/oppdaterDestinasjoner"
+        android:title="Synkroniser"
+        android:icon="@mipmap/ic_sync"
+        app:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/innstillinger"
         android:title="Innstillinger"
         app:showAsAction="never"/>

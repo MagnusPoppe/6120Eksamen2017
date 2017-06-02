@@ -1,7 +1,6 @@
 package no.byteme.magnuspoppe.eksamen.datamodel;
 
 import android.support.annotation.NonNull;
-import android.text.Editable;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -24,6 +23,8 @@ public class Destinasjon implements Comparable
     private double longitude;
     private int moh;
 
+    private boolean iGlobalDatabase;
+
     private float avstandFraEnhet;
 
     /**
@@ -37,11 +38,13 @@ public class Destinasjon implements Comparable
         this.latitude = lat;
         this.longitude = lng;
         this.moh = (int) moh;
+        this.iGlobalDatabase = false;
     }
 
-    public Destinasjon(String eier, String navn, String type, String beskrivelse,
+    public Destinasjon(int ID, String eier, String navn, String type, String beskrivelse,
                        String bildeURL, double latitude, double longitude, int moh
     ) {
+        this.databaseID = ID;
         this.eier = eier;
         this.navn = navn;
         this.type = type;
@@ -50,6 +53,7 @@ public class Destinasjon implements Comparable
         this.latitude = latitude;
         this.longitude = longitude;
         this.moh = moh;
+        this.iGlobalDatabase = false;
     }
 
     /**
@@ -91,6 +95,9 @@ public class Destinasjon implements Comparable
         if (type.equals("null")) type = "";
         if (beskrivelse.equals("null")) beskrivelse = "";
         if (bildeURL.equals("null")) bildeURL = "";
+
+        // Disse kommer fra nett
+        iGlobalDatabase = true;
     }
 
     @Override
@@ -98,6 +105,16 @@ public class Destinasjon implements Comparable
     {
         Destinasjon andre = (Destinasjon) o;
         return Math.round(getAvstandFraEnhet() - andre.getAvstandFraEnhet());
+    }
+
+    public boolean isiGlobalDatabase()
+    {
+        return iGlobalDatabase;
+    }
+
+    public void setiGlobalDatabase(boolean iGlobalDatabase)
+    {
+        this.iGlobalDatabase = iGlobalDatabase;
     }
 
     public LatLng getKoordinat()
@@ -168,20 +185,21 @@ public class Destinasjon implements Comparable
     /**
      * Lager en streng med JSON notasjon versjon av objektet. Dette
      * skal brukes med database håndtering.
+     *
      * @return JSON formatert objekt.
      */
     public String toJSON()
     {
         return "{" +
-                    "\"locationID\":\""+getDatabaseID()+"\"," +
-                    "\"owner\":\""+getEier()+"\"," +
-                    "\"name\":\""+getNavn()+"\"," +
-                    "\"type\":\""+getType()+"\"," +
-                    "\"description\":\""+getBeskrivelse()+"\"," +
-                    "\"imageURL\":\""+getBildeURL()+"\"," +
-                    "\"lat\":"+getKoordinat().latitude+"," +
-                    "\"lng\":"+getKoordinat().longitude+"," +
-                    "\"moh\":"+getMoh()+
+                "\"locationID\":\"" + getDatabaseID() + "\"," +
+                "\"owner\":\"" + getEier() + "\"," +
+                "\"name\":\"" + getNavn() + "\"," +
+                "\"type\":\"" + getType() + "\"," +
+                "\"description\":\"" + getBeskrivelse() + "\"," +
+                "\"imageURL\":\"" + getBildeURL() + "\"," +
+                "\"lat\":" + getKoordinat().latitude + "," +
+                "\"lng\":" + getKoordinat().longitude + "," +
+                "\"moh\":" + getMoh() +
                 "}";
     }
 
@@ -193,5 +211,10 @@ public class Destinasjon implements Comparable
     public void setDatabaseID(int databaseID)
     {
         this.databaseID = databaseID;
+    }
+
+    public void setBildeURL(String bildeURL)
+    {
+        this.bildeURL = bildeURL;
     }
 }

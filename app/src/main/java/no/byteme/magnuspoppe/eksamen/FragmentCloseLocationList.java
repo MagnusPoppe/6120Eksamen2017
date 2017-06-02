@@ -46,6 +46,9 @@ public class FragmentCloseLocationList extends Fragment
         ActivityController aktivitet = (ActivityController) getActivity();
         aktivitet.skalerPanelVekting(.4f);
         aktivitet.getLeggTilKnapp().setVisibility(View.VISIBLE);
+
+        // Sjekker alltid om det er uopplastede elementer som venter på å lastes opp.
+        aktivitet.lastOppMidlertidigLagret();
     }
 
     @Override
