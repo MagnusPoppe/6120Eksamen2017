@@ -7,6 +7,7 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -38,7 +39,10 @@ import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
 import no.byteme.magnuspoppe.eksamen.datamodel.DestinasjonDB;
 
 /**
- * Dette er kontrolleren for hele applikasjonen.
+ * Dette er kontrolleren for hele applikasjonen. ActivityCtrl styrer
+ * interaksjon mellom presentasjon og modell. Den er også kontroller
+ * nettbasert opplasting og nedlasting av "Destinasjoner. Alle fragmeneter
+ * som vises er plassert oppå denne aktiviteten.
  */
 public class ActivityCtrl extends Activity
         implements GoogleApiClient.ConnectionCallbacks,
@@ -52,6 +56,7 @@ public class ActivityCtrl extends Activity
     private static final LatLng HOYSKOLEN = new LatLng(59.408852, 9.059512);
     public static final String INNSTILLINGER = "no.byteme.magnuspoppe.eksamen.preferences";
     public static final String FOTO_LAGER="images";
+    public final static int REQUEST_LOCATION = 1;
 
     // ID på forskjellig lagret i "SavedInstanceState":
     private static final String DESTINASJONSLISTE = "liste..";
@@ -102,6 +107,7 @@ public class ActivityCtrl extends Activity
         leggTilKnapp = (FloatingActionButton) findViewById(R.id.leggTil);
         animasjonsOppsett();
 
+        // Lager databaseobjeketet for interaksjon med lokal database:
         db = new DestinasjonDB(getApplicationContext());
 
         // Henter ut "state":
@@ -143,7 +149,7 @@ public class ActivityCtrl extends Activity
             else // DETTE ER GRUNNET FEILEN BESKREVET I "onSaveInstanceState".
                 visKart();
         }
-        else
+        else // Hvis appen akkurat ble startet:
         {
             visDestinasjonsListe();
             // Lager kart og listepanel:
@@ -152,6 +158,9 @@ public class ActivityCtrl extends Activity
         }
     }
 
+    /**
+     * Gjør tilkobling til google play services og lokal SQLite database:
+     */
     @Override
     protected void onStart()
     {
@@ -164,6 +173,9 @@ public class ActivityCtrl extends Activity
         db.open();
     }
 
+    /**
+     * Håndterer nedkobling av google play services og lokal SQLite database
+     */
     @Override
     protected void onStop()
     {
@@ -176,6 +188,14 @@ public class ActivityCtrl extends Activity
         super.onStop();
     }
 
+    /**
+     * Her lagres datasettet som skal beholdes til neste kjøring av
+     * aktivteten. Dette gjøres ved å lagre hele arraylisten som
+     * parcelable.
+     *
+     * Fragmentet som er aktivt og kartfragmentet blir også lagret her.
+     * @param outState
+     */
     @Override
     protected void onSaveInstanceState(Bundle outState)
     {
@@ -212,12 +232,14 @@ public class ActivityCtrl extends Activity
         // Skjuler "legg til" knapp (blir satt tilbake når listen vises igjen):
         getLeggTilKnapp().setVisibility(View.GONE);
 
+        // Gjør klar fragment og visning:
         visInnstillingPanel(true);
         Preferences innstillingFragment = new Preferences();
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
         transaksjon.replace(R.id.innstillingFragmentHolder, innstillingFragment);
         transaksjon.addToBackStack(null);
 
+        // Lagerer fragment i tilfelle rotasjon:
         activeFragement = innstillingFragment;
 
         // Utfører transaksjonen.
@@ -228,7 +250,7 @@ public class ActivityCtrl extends Activity
      * Viser innstillingspanel-holderen for å få hvit bakgrunn på
      * innstillingsvindu. Dette er egendefinert HACK for å unngå transparent
      * bakgrunn.
-     * @param vis feilPanel eller ikke vis feilPanel
+     * @param vis innstillingspanel eller ikke vis innstillingspanel
      */
     public void visInnstillingPanel(boolean vis)
     {
@@ -248,6 +270,7 @@ public class ActivityCtrl extends Activity
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
         transaksjon.replace(R.id.ListeFragmentHolder, destinasjonsliste);
 
+        // Lagerer fragment i tilfelle rotasjon:
         activeFragement = destinasjonsliste;
 
         // Utfører transaksjonen.
@@ -261,6 +284,7 @@ public class ActivityCtrl extends Activity
      */
     public void visDetaljertInformasjonsPanel(int indeksDestinasjon)
     {
+        // BACKSTACK KONTROLL:
         // Vi vil alltid at når man klikker tilbakeknappen skal man
         // se listen. Vi fjerner derfor et lag om vi allerede viser detaljinfo vinduet
         // når et nytt hentes inn.
@@ -271,8 +295,6 @@ public class ActivityCtrl extends Activity
             // Skjuler "legg til" knapp (blir satt tilbake når listen vises igjen):
             getLeggTilKnapp().setVisibility(View.GONE);
         }
-
-
 
         // Skalerer om vindu for å flytte brukerens fokus:
         skalerPanelVekting(0.6f);
@@ -289,6 +311,7 @@ public class ActivityCtrl extends Activity
         argumenter.putInt(UTVALGT, indeksDestinasjon);
         detaljinfo.setArguments(argumenter);
 
+        // Lagerer fragment i tilfelle rotasjon:
         activeFragement = detaljinfo;
 
         // Utfører transaksjonen.
@@ -297,6 +320,8 @@ public class ActivityCtrl extends Activity
 
     /**
      * Viser detaljert informasjonspanel med et gitt destinasjonsobjekt.
+     * Denne metoden henter ut korrekt id på en gitt destinasjon så kaller
+     * på metoden.
      * @param destinasjon som skal vises.
      */
     public void visDetaljertInformasjonsPanel(Destinasjon destinasjon)
@@ -314,7 +339,7 @@ public class ActivityCtrl extends Activity
 
     /**
      * Viser "legg til panelet i vinduet. Kartet skal sentrers til posisjonen
-     * brukeren har og kan ikke flyttes nå. TODO!
+     * brukeren har.
      */
     private void visLeggTilLokasjon()
     {
@@ -348,7 +373,7 @@ public class ActivityCtrl extends Activity
     /**
      * Viser kartet uten parametere. Dette vil gjøre at
      * kartfragmentet (FragmentMap) vil gjøre sin standard
-     * visning av enhetens koordinater.
+     * visning av enhetens posisjon.
      */
     private void visKart()
     {
@@ -357,7 +382,7 @@ public class ActivityCtrl extends Activity
 
     /**
      * Viser kartet som fragment inn i "mapFragmentContainer"
-     * @param koordinater kartet skal sentrere seg rundt.
+     * @param koordinater kartet skal sentrere seg rundt eller NULL for enhets posisjon.
      */
     private void visKart(LatLng koordinater)
     {
@@ -386,12 +411,15 @@ public class ActivityCtrl extends Activity
      */
     public void skalerPanelVekting(float vekt)
     {
+        // HVIS DET ER EN XL skjerm skal ikke vektingen endre seg.
+        if (erTablet()) return;
+
         // Skalerer bunnpanelet til oppgitt vekt:
         LinearLayout.LayoutParams param = (LinearLayout.LayoutParams) bunnPanel.getLayoutParams();
         param.weight = vekt;
         bunnPanel.setLayoutParams(param);
 
-        // Skalerer kartpanel til Kompliment av vekting:
+        // Skalerer kartpanel til kompliment av vekting:
         LinearLayout.LayoutParams kartParam = (LinearLayout.LayoutParams) kartPanel.getLayoutParams();
         kartParam.weight = (1-vekt);
         kartPanel.setLayoutParams(kartParam);
@@ -406,9 +434,9 @@ public class ActivityCtrl extends Activity
      */
     private void oppdaterDatasett()
     {
-        // Henter ut datasett:
-        if (enhetPåNett())
+        if (harInternettForbindelse())
         {
+            // Henter ut datasett:
             AsynkronDestinasjon oppgave = new AsynkronDestinasjon(this);
             oppgave.get();
         }
@@ -419,10 +447,11 @@ public class ActivityCtrl extends Activity
      * i databasen som ikke finnes på nett. Hvis finnes, skal de lastes opp,
      * så slettes lokalt. Slettingen gjøres ved CallBack.
      * Callback metode: ActivityCtrl.vedKomplettOpplastingAvDestinasjoner()
+     * Dette er forsikret gjennom interface: mellomLagerKontrakt
      */
     protected void lastOppMidlertidigLagret()
     {
-        if (enhetPåNett())
+        if (harInternettForbindelse())
         {
             Destinasjon[] uopplastet = db.getAlleUopplastedeDestinasjoner();
 
@@ -437,9 +466,10 @@ public class ActivityCtrl extends Activity
     }
 
     /**
-     * Callback for når uoplastende lokalt lagrede elementer har
+     * Callback for når uopplastede lokalt lagrede elementer har
      * blitt lastet opp til den globale databasen.
      * @param ider på de opplastede elementene.
+     * Dette er forsikret gjennom interface: mellomLagerKontrakt
      */
     public void vedKomplettOpplastingAvDestinasjoner(int[] ider)
     {
@@ -455,6 +485,22 @@ public class ActivityCtrl extends Activity
         oppdaterDatasett();
     }
 
+    /**
+     * Callback for når nytt datasett er lastet inn asynkront.
+     * Dette gjøres fordi listen lastes inn hurtigere enn
+     * selve datasettet gjør. Dette blir dermed lastet inn tomt.
+     * TODO: Endre slik at dette ikke skjer som full restart.
+     */
+    public void oppdaterDestnasjonsliste()
+    {
+        // Oppdaterer view
+        if (destinasjonsliste != null)
+        {
+            // destinasjonsliste.sjekkOmTomListe();
+            visDestinasjonsListe(); // HACK... må fikses...
+            settUtAlleMarkorer();
+        }
+    }
     //---------------------------------------------------------------
     //      Metoder som Lokasjonshåndtering og destinasjoner
     //---------------------------------------------------------------
@@ -486,7 +532,7 @@ public class ActivityCtrl extends Activity
     /**
      * Legger til en destinasjon på sin korrekte sorterte plass i
      * ArrayListen av destinasjoner.
-     * @param destinasjon
+     * @param destinasjon som skal settes inn
      */
     public void leggTilDestinasjon(Destinasjon destinasjon)
     {
@@ -504,7 +550,7 @@ public class ActivityCtrl extends Activity
 
     /**
      * Setter destinasjonsobjektet og sorterer det etter enhetens posisjon.
-     * @param destinasjoner
+     * @param destinasjoner liste
      */
     public void setDestinasjoner(ArrayList<Destinasjon> destinasjoner)
     {
@@ -524,7 +570,10 @@ public class ActivityCtrl extends Activity
     {
         if (kart != null)
         {
+            // Fjerner markører før innsettnig for å unngå redundans:
             kart.fjernAlleMarkorer();
+
+            // Markerer kartet:
             for (Destinasjon destinasjon : destinasjoner)
                 kart.markerKartet(destinasjon, destinasjon.getKoordinat());
         }
@@ -556,7 +605,9 @@ public class ActivityCtrl extends Activity
 
             // Setter avstand og markerer kartet med destinasjonen.
             destinasjon.setAvstandFraEnhet(resultater[0]);
-            sorterbar[i++] = destinasjon; // Legger til elemeneter inn i en sorterbar tabell
+
+            // Legger til elemeneter inn i en sorterbar tabell
+            sorterbar[i++] = destinasjon;
         }
 
         // Sorterer tabellen:
@@ -566,18 +617,13 @@ public class ActivityCtrl extends Activity
         destinasjoner.clear();
         for( Destinasjon destinasjon : sorterbar )
             destinasjoner.add(destinasjon);
-
-        // Oppdaterer view hvis på hovedthread.
-        if (destinasjonsliste != null && Looper.myLooper() == Looper.getMainLooper())
-        {
-            destinasjonsliste.oppdaterListen();
-            settUtAlleMarkorer();
-        }
     }
 
     /**
+     * Animerer flytting av kartposisjon til lokasjonen til bruker
+     * posisjon (enhetens posisjon).
      * "Eventhandeler" for min lokasjon knappen. Flytter kartet til min
-     * lokasjon.
+     * lokasjon. Denne brukes også i mange andre tilfeller.
      */
     public void gåTilLokasjon()
     {
@@ -585,7 +631,7 @@ public class ActivityCtrl extends Activity
     }
 
     /**
-     * "Eventhandeler" for legg til knapp.
+     * "Eventhandeler" for legg til knapp. (FAB)
      * Denne kontrollerer om bruker er klar for å legge til lokasjon.
      * Dette krever brukerdata og lokasjonsdata.
      * @param view
@@ -594,6 +640,7 @@ public class ActivityCtrl extends Activity
     {
         FloatingActionButton fab = (FloatingActionButton) view;
 
+        // For å legge til ny bruker må man ha brukerkonto registrert:
         if (bruker == null)
         {
             Snackbar.make(view, "Ingen registrert bruker.", Snackbar.LENGTH_INDEFINITE)
@@ -607,6 +654,7 @@ public class ActivityCtrl extends Activity
                     .show();
             return;
         }
+        // Epost adresse må være korrekt formatert:
         if (! bruker.harKorrektEpost())
         {
             Snackbar.make(view, "Feil format på E-Post.", Snackbar.LENGTH_INDEFINITE)
@@ -618,11 +666,6 @@ public class ActivityCtrl extends Activity
                         }
                     })
                     .show();
-            return;
-        }
-        if (lokasjon == null)
-        {
-            Snackbar.make(view, "Kan ikke legge til uten enhetens lokasjon.", Snackbar.LENGTH_SHORT).show();
             return;
         }
 
@@ -639,8 +682,10 @@ public class ActivityCtrl extends Activity
      */
     public void brukerOppsett()
     {
+        // Henter inn innstillinger objeket:
         SharedPreferences preferences = getSharedPreferences(INNSTILLINGER, MODE_PRIVATE);
 
+        // Sjekker om epost er lagret:
         if (preferences.contains("email"))
         {
             bruker = new Bruker(
@@ -649,7 +694,8 @@ public class ActivityCtrl extends Activity
                     preferences.getString("lastName", "")
             );
         }
-        else {
+        else // Returner null verdi om bruker ikke er registrert i epost.
+        {
             bruker = null;
         }
     }
@@ -664,6 +710,31 @@ public class ActivityCtrl extends Activity
         MenuInflater menyView = getMenuInflater();
         menyView.inflate(R.menu.main_menu, menu);
         return true;
+    }
+
+    /**
+     * "Event handeler" for når menyen blir brukt.
+     * @param valgt oppføring i menyen
+     * @return true hvis klikket ble håndtert
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem valgt) {
+        // Håndtere knappeklikk fra bruker:
+        switch (valgt.getItemId()) {
+            case R.id.innstillinger:
+                visInnstillinger();
+                return true;
+            case R.id.oppdaterLokasjon:
+                gåTilLokasjon();
+                return true;
+            case R.id.oppdaterDestinasjoner:
+                oppdaterDatasett();
+                lastOppMidlertidigLagret();
+                visDestinasjonsListe();
+                return true;
+            default:
+                return super.onOptionsItemSelected(valgt);
+        }
     }
 
     /**
@@ -686,29 +757,16 @@ public class ActivityCtrl extends Activity
     }
 
     /**
-     * "Event handeler" for når menyen blir brukt.
-     * @param valgt oppføring i menyen
-     * @return
+     * Oppdateringsfunskjon for når feilen at "arraylist" med destinasjoner
+     * er tom. Dette er en "Event handeler" for knappen under "feilPanelListe"
+     * i fragmentet "FragmentCloseLocationsList".
+     * @param view
      */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem valgt) {
-        // Håndtere knappeklikk fra bruker:
-        switch (valgt.getItemId()) {
-            case R.id.innstillinger:
-                visInnstillinger();
-                return true;
-            case R.id.oppdaterLokasjon:
-                gåTilLokasjon();
-                return true;
-            case R.id.oppdaterDestinasjoner:
-                oppdaterDatasett();
-                lastOppMidlertidigLagret();
-                return true;
-            default:
-                return super.onOptionsItemSelected(valgt);
-        }
+    public void oppdaterEtterFeil(View view)
+    {
+        oppdaterDatasett();
+        visDestinasjonsListe();
     }
-
 
     //---------------------------------------------------------------
     //      SETTERS OG GETTERS:
@@ -763,7 +821,7 @@ public class ActivityCtrl extends Activity
      * å unngå feil ved asynkrone oppgaver.
      * @return true hvis internett, false hvis ikke.
      */
-    public boolean enhetPåNett()
+    public boolean harInternettForbindelse()
     {
         ConnectivityManager cm = (ConnectivityManager) getSystemService(
                 Activity.CONNECTIVITY_SERVICE
@@ -772,12 +830,35 @@ public class ActivityCtrl extends Activity
         return (networkInfo != null && networkInfo.isConnected());
     }
 
+    /**
+     * Metode for å finne skjermstørrelsen.
+     * Tilpasset fra kode hentet ved Stack Overflow:
+     * https://stackoverflow.com/questions/5015094/how-to-determine-device-screen-size-category-small-normal-large-xlarge-usin/19256468#19256468
+     *
+     * @return sant hvis veldig stor skjermstørrelse.
+     */
+    private boolean erTablet() {
+        int screenLayout = getResources().getConfiguration().screenLayout;
+        screenLayout &= Configuration.SCREENLAYOUT_SIZE_MASK;
+
+        switch (screenLayout) {
+            case Configuration.SCREENLAYOUT_SIZE_SMALL:
+                return false;
+            case Configuration.SCREENLAYOUT_SIZE_NORMAL:
+                return false;
+            case Configuration.SCREENLAYOUT_SIZE_LARGE:
+                return true;
+            case 4: // Configuration.SCREENLAYOUT_SIZE_XLARGE is API >= 9
+                return true;
+            default:
+                return false;
+        }
+    }
+
     //---------------------------------------------------------------
     //      FØLGENDE ER KOPI FRA LEKSJON 12B.
     //      Modifisert for å passe applikasjonen.
     //---------------------------------------------------------------
-
-    public final static int REQUEST_LOCATION = 1;
 
     /**
      * Utføres når oppkobling skjer.
@@ -844,17 +925,5 @@ public class ActivityCtrl extends Activity
                         "Kan ikke vise posisjon uten tillatelse", Snackbar.LENGTH_LONG).show();
             }
         }
-    }
-
-    /**
-     * Oppdateringsfunskjon for når feilen at "arraylist" med destinasjoner
-     * er tom. Dette er en "Event handeler" for knappen under "feilPanelListe"
-     * i fragmentet "FragmentCloseLocationsList".
-     * @param view
-     */
-    public void oppdaterEtterFeil(View view)
-    {
-        oppdaterDatasett();
-        visDestinasjonsListe();
     }
 }

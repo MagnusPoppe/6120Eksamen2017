@@ -55,7 +55,7 @@ public class FragmentCloseLocationList extends Fragment
     {
         if (destinasjoner.isEmpty())
         {
-            if (!aktivitet.enhetPåNett())
+            if (!aktivitet.harInternettForbindelse())
                 visOppdaterPanel(getResources().getString(R.string.list_empty));
             else
                 visOppdaterPanel(getResources().getString(R.string.empty_database));

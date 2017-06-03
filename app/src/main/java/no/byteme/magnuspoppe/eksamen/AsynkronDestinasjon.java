@@ -220,6 +220,8 @@ public class AsynkronDestinasjon
                 if (utførSlettingEtterOpplasting)
                     aktivitet.vedKomplettOpplastingAvDestinasjoner(skalSlettes);
 
+                aktivitet.oppdaterDestnasjonsliste();
+
             } else if (resultat == FEILFORMATERT_URL_FEIL)
             {
                 status = "Bad url...";

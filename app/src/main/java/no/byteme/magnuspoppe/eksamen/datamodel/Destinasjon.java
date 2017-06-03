@@ -9,11 +9,20 @@ import com.google.android.gms.maps.model.LatLng;
 import org.json.JSONObject;
 
 /**
+ * Denne klassen holder på dataobjektetene til alle turmål.
+ *
+ * Grunnen til at klassen ble kalt "Destinasjon" var at jeg
+ * først begynte programmeringen på engelsk, og dermed endte
+ * opp med at oversettelsen til Turmål var destinasjon. Når
+ * jeg så at eksamen skulle skrives på norsk ble den refaktorert
+ * slik. Jeg vil helst unngå Æ-Ø-Å i koden.
+ *
  * Created by MagnusPoppe on 29/05/2017.
  */
 
 public class Destinasjon implements Comparable, Parcelable
 {
+    // Data om sted:
     private int databaseID;
     private String eier;
     private String navn;
@@ -21,13 +30,14 @@ public class Destinasjon implements Comparable, Parcelable
     private String beskrivelse;
     private String bildeURL;
 
+    // Posisjonsrelaterte data:
     private double latitude;
     private double longitude;
     private int moh;
-
-    private boolean iGlobalDatabase;
-
     private float avstandFraEnhet;
+
+    // Boolean på å se om objektet er lastet opp i database:
+    private boolean iGlobalDatabase;
 
     /**
      * Konstruktør brukt når man legger til ny lokasjon.
@@ -43,6 +53,18 @@ public class Destinasjon implements Comparable, Parcelable
         this.iGlobalDatabase = false;
     }
 
+    /**
+     * Konstruktør med alle felter. Brukes av DestinasjonDB
+     * @param ID til global database hvis lastet opp, ellers lokal.
+     * @param eier av turmålet
+     * @param navn på turmålet
+     * @param type av turmålet
+     * @param beskrivelse på turmålet
+     * @param bildeURL til turmålet
+     * @param latitude for turmålet
+     * @param longitude for turmålet
+     * @param moh ved turmålets lokasjon.
+     */
     public Destinasjon(int ID, String eier, String navn, String type, String beskrivelse,
                        String bildeURL, double latitude, double longitude, int moh
     ) {
@@ -102,6 +124,12 @@ public class Destinasjon implements Comparable, Parcelable
         iGlobalDatabase = true;
     }
 
+    /**
+     * Konstruktør for å tillate mellomlagring av objektet som
+     * Parcelable. Dette ble lagt inn for å kunne lagre hele
+     * datasettet i "savedInstaceState".
+     * @param in objekt som skal dekodes.
+     */
     public Destinasjon(Parcel in)
     {
         databaseID = in.readInt();
@@ -114,13 +142,84 @@ public class Destinasjon implements Comparable, Parcelable
         longitude = in.readDouble();
         moh = in.readInt();
     }
+    @Override
+    public int describeContents()
+    {
+        return 0;
+    }
 
+    /**
+     * Lagerer objektet i parcel format for å kunne mellomlagre på rotasjon og
+     * ved andre hedelser.
+     * @param dest
+     * @param flags
+     */
+    @Override
+    public void writeToParcel(Parcel dest, int flags)
+    {
+        dest.writeInt(databaseID);
+        dest.writeString(eier);
+        dest.writeString(navn);
+        dest.writeString(type);
+        dest.writeString(beskrivelse);
+        dest.writeString(bildeURL);
+        dest.writeDouble(latitude);
+        dest.writeDouble(longitude);
+        dest.writeInt(moh);
+        dest.writeBooleanArray(new boolean[]{isiGlobalDatabase()});
+    }
+
+    /**
+     * Mønster på hvordan lagre ArrayList<> av generisk type til parcel for
+     * at objektene skal overleve rotasjon.
+     *
+     * Lenke til inspirasjonskilde:
+     * https://stackoverflow.com/questions/12503836/how-to-save-custom-arraylist-on-android-screen-rotate
+     */
+    public static final Parcelable.Creator<Destinasjon> CREATOR = new Parcelable.Creator<Destinasjon>() {
+        public Destinasjon createFromParcel(Parcel in) {
+            return new Destinasjon(in);
+        }
+
+        public Destinasjon[] newArray(int size) {
+            return new Destinasjon[size];
+        }
+    };
+    /**
+     * Sammenlikner avstanden mellom to destinasjoner. Brukes
+     * ved sortering av listeelementer for nærmeste først.
+     * @param o objeket
+     * @return
+     */
     @Override
     public int compareTo(@NonNull Object o)
     {
         Destinasjon andre = (Destinasjon) o;
         return Math.round(getAvstandFraEnhet() - andre.getAvstandFraEnhet());
     }
+
+    /**
+     * Lager en streng med JSON notasjon versjon av objektet. Dette
+     * skal brukes med database håndtering.
+     *
+     * @return JSON formatert objekt.
+     */
+    public String toJSON()
+    {
+        return "{" +
+                "\"locationID\":\"" + getDatabaseID() + "\"," +
+                "\"owner\":\"" + getEier() + "\"," +
+                "\"name\":\"" + getNavn() + "\"," +
+                "\"type\":\"" + getType() + "\"," +
+                "\"description\":\"" + getBeskrivelse() + "\"," +
+                "\"imageURL\":\"" + getBildeURL() + "\"," +
+                "\"lat\":" + getKoordinat().latitude + "," +
+                "\"lng\":" + getKoordinat().longitude + "," +
+                "\"moh\":" + getMoh() +
+                "}";
+    }
+
+    // FØLGENDE ER KUN GETTERS OG SETTERS:
 
     public boolean isiGlobalDatabase()
     {
@@ -197,27 +296,6 @@ public class Destinasjon implements Comparable, Parcelable
         this.beskrivelse = beskrivelse;
     }
 
-    /**
-     * Lager en streng med JSON notasjon versjon av objektet. Dette
-     * skal brukes med database håndtering.
-     *
-     * @return JSON formatert objekt.
-     */
-    public String toJSON()
-    {
-        return "{" +
-                "\"locationID\":\"" + getDatabaseID() + "\"," +
-                "\"owner\":\"" + getEier() + "\"," +
-                "\"name\":\"" + getNavn() + "\"," +
-                "\"type\":\"" + getType() + "\"," +
-                "\"description\":\"" + getBeskrivelse() + "\"," +
-                "\"imageURL\":\"" + getBildeURL() + "\"," +
-                "\"lat\":" + getKoordinat().latitude + "," +
-                "\"lng\":" + getKoordinat().longitude + "," +
-                "\"moh\":" + getMoh() +
-                "}";
-    }
-
     public void setEier(String eier)
     {
         this.eier = eier;
@@ -232,42 +310,4 @@ public class Destinasjon implements Comparable, Parcelable
     {
         this.bildeURL = bildeURL;
     }
-
-    @Override
-    public int describeContents()
-    {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags)
-    {
-        dest.writeInt(databaseID);
-        dest.writeString(eier);
-        dest.writeString(navn);
-        dest.writeString(type);
-        dest.writeString(beskrivelse);
-        dest.writeString(bildeURL);
-        dest.writeDouble(latitude);
-        dest.writeDouble(longitude);
-        dest.writeInt(moh);
-        dest.writeBooleanArray(new boolean[]{isiGlobalDatabase()});
-    }
-
-    /**
-     * Mønster på hvordan lagre ArrayList<> av generisk type til parcel for
-     * at objektene skal overleve rotasjon.
-     *
-     * Lenke til inspirasjonskilde:
-     * https://stackoverflow.com/questions/12503836/how-to-save-custom-arraylist-on-android-screen-rotate
-     */
-    public static final Parcelable.Creator<Destinasjon> CREATOR = new Parcelable.Creator<Destinasjon>() {
-        public Destinasjon createFromParcel(Parcel in) {
-            return new Destinasjon(in);
-        }
-
-        public Destinasjon[] newArray(int size) {
-            return new Destinasjon[size];
-        }
-    };
 }

@@ -5,7 +5,12 @@
     brukes ikke med "weight" attributten.
 -->
 <resources>
+    <!-- FOR NORMALE ENHETER: -->
     <item type="dimen" format="float" name="smallPanel">0.40</item>
     <item type="dimen" format="float" name="mediumPanel">0.50</item>
     <item type="dimen" format="float" name="largePanel">0.60</item>
+
+    <!-- FOR XL ENHETER: -->
+    <item type="dimen" format="float" name="XLsmallPanel">0.30</item>
+    <item type="dimen" format="float" name="XLlargePanel">0.70</item>
 </resources>

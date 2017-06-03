@@ -136,6 +136,7 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
 
         // Bildeholder:
         innBilde = (ImageView) view.findViewById(R.id.innBilde);
+        innBilde.setImageResource(R.mipmap.ic_camera);
         innBilde.setOnClickListener(new View.OnClickListener()
         {
             @Override
@@ -294,7 +295,7 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
         // BitmapDrawable bilde = (BitmapDrawable)innBilde.getDrawable();
         // lagreBilde(bilde.getBitmap());
 
-        if(aktivitet.enhetPåNett())
+        if(aktivitet.harInternettForbindelse())
         {
             AsynkronDestinasjon oppgave = new AsynkronDestinasjon(aktivitet);
             oppgave.post(denneDestinasjonen);

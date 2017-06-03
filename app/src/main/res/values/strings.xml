@@ -12,6 +12,6 @@
 
     <!-- Errorstrenger: -->
     <string name="update_list">Oppdater Liste</string>
-    <string name="empty_database">Feil har inntruffet med databaseinterasjon.</string>
+    <string name="empty_database">En ukjent feil har untruffet.</string>
     <string name="list_empty">Destinasjonslisten er tom.</string>
 </resources>

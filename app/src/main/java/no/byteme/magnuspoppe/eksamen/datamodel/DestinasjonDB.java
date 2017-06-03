@@ -43,11 +43,20 @@ public class DestinasjonDB
     private DatabaseHelper dbHjelp;
     SQLiteDatabase DB;
 
+    /**
+     * Konstruktør
+     * @param context
+     */
     public DestinasjonDB(Context context)
     {
         this.context = context;
     }
 
+    /**
+     * Åpner forbindelse med SQLite database:
+     * @return
+     * @throws SQLException
+     */
     public DestinasjonDB open() throws SQLException
     {
         dbHjelp = new DatabaseHelper(context);
@@ -55,6 +64,9 @@ public class DestinasjonDB
         return this;
     }
 
+    /**
+     * Lukker forbindelse med SQLite database:
+     */
     public void close()
     {
         if (dbHjelp != null)
@@ -63,6 +75,12 @@ public class DestinasjonDB
         }
     }
 
+    /**
+     * Oppgraderer databasen om skriptet er endret. Siden
+     * denne databasen kun holder på temp data har jeg ikke laget
+     * noen overføringsmetode.
+     * @throws SQLException
+     */
     public void upgrade() throws SQLException
     {
         dbHjelp = new DatabaseHelper(context); //open
@@ -76,6 +94,7 @@ public class DestinasjonDB
      */
     public void insertDestinasjon(Destinasjon destinasjon)
     {
+        // Lagger insert setning:
         ContentValues verdier = new ContentValues();
         verdier.put(KOL_EIER, destinasjon.getEier());
         verdier.put(KOL_NAVN, destinasjon.getNavn());
@@ -86,6 +105,8 @@ public class DestinasjonDB
         verdier.put(KOL_LNG, destinasjon.getKoordinat().longitude);
         verdier.put(KOL_MOH, destinasjon.getMoh());
         verdier.put(KOL_GLOBAL, destinasjon.isiGlobalDatabase());
+
+        // Setter inn:
         destinasjon.setDatabaseID((int) DB.insert(TABELL_NAVN, null, verdier));
     }
 
@@ -157,7 +178,7 @@ public class DestinasjonDB
     {
         SQLiteDatabase db = dbHjelp.getReadableDatabase();
 
-        // Definerer kolonner jeg ønsker utog annet viktig:
+        // Definerer kolonner jeg ønsker ut og annet viktig:
         String[] resultatKolonner = {
                 KOL_ID,                                                      // INT ID
                 KOL_EIER, KOL_NAVN, KOL_TYPE, KOL_BESKRIVELSE, KOL_BILDEURL, // Streng kolonner
@@ -242,6 +263,11 @@ public class DestinasjonDB
         }
     }
 
+    /**
+     * Create table skriptet mitt. Dette er et litt modifisert skript hentet
+     * fra E/R diagrammet vedlagt. Enkelte syntaksendringer har skjedd, og
+     * indekser måtte fjernes.
+     */
     private static final String CREATE_TABLE_SQL = "CREATE TABLE `"+ TABELL_NAVN +"` (\n" +
             "  `locationID` INTEGER PRIMARY KEY AUTOINCREMENT," +
             "  `owner` VARCHAR(128) NOT NULL," +

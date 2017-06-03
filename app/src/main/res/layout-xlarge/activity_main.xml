@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="no.byteme.magnuspoppe.eksamen.ActivityCtrl"
+    android:background="@android:color/background_dark"
+    >
+    <android.widget.Toolbar
+        android:id="@+id/appLinje"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/colorPrimary"
+        android:elevation="4dp"/>
+    <LinearLayout
+        android:layout_marginTop="?attr/actionBarSize"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:visibility="visible"
+        android:id="@+id/mainFragmentContainer"
+        android:background="@android:color/background_light"
+        >
+        <LinearLayout
+            android:layout_width="@dimen/flat"
+            android:layout_height="match_parent"
+            android:layout_weight="@dimen/XLsmallPanel"
+            android:orientation="vertical"
+            android:id="@+id/ListeFragmentHolder"/>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="@dimen/flat"
+            android:layout_height="match_parent"
+            android:layout_weight="@dimen/XLlargePanel"
+            android:id="@+id/kartFragmentHolder"/>
+    </LinearLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="?attr/actionBarSize"
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:background="@android:color/background_light"
+            android:id="@+id/innstillingFragmentHolder">
+
+        </LinearLayout>
+        <android.support.design.widget.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_margin="@dimen/defaultPadding"
+            android:visibility="gone"
+            android:src="@mipmap/ic_add"
+            android:id="@+id/leggTil"
+            android:onClick="leggTilLokasjon"/>
+    </RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>
