@@ -185,14 +185,18 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
             else getFragmentManager().popBackStack();
         }
 
-
+        ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
         SharedPreferences innstillinger =
-                getActivity().getSharedPreferences(ActivityCtrl.INNSTILLINGER, MODE_PRIVATE);
+                aktivitet.getSharedPreferences(ActivityCtrl.INNSTILLINGER, MODE_PRIVATE);
         denneDestinasjonen.setEier(innstillinger.getString("email", ""));
 
         innLat.setText(denneDestinasjonen.getKoordinat().latitude+"");
         innLng.setText(denneDestinasjonen.getKoordinat().longitude+"");
         innMoh.setText(denneDestinasjonen.getMoh() + " " + getResources().getString(R.string.metersAboveSeaLevel));
+
+
+        aktivitet.getLeggTilKnapp().setVisibility(View.GONE);
+        aktivitet.skalerPanelVekting(0.6f);
 
         return view;
     }

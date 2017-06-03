@@ -16,6 +16,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -56,6 +57,7 @@ public class ActivityCtrl extends Activity
     private static final String DESTINASJONSLISTE = "liste..";
     public static final String UTVALGT = "SELECTED_DESTINATION";
     private static final String AKTIVT_FRAGMENT = "aklsd";
+    private static final String KARTFRAGMENT = "KARTET LAGRET.";
 
     // "STATE":
     private boolean detaljinfoVises;
@@ -103,7 +105,7 @@ public class ActivityCtrl extends Activity
         db = new DestinasjonDB(getApplicationContext());
 
         // Henter ut "state":
-        if(savedInstanceState == null || !savedInstanceState.containsKey(DESTINASJONSLISTE))
+        if (savedInstanceState == null || !savedInstanceState.containsKey(DESTINASJONSLISTE))
         {
             // Henter ut destinasjonsdata asynkront:
             destinasjoner = new ArrayList<>();
@@ -112,11 +114,14 @@ public class ActivityCtrl extends Activity
         else // Inneholder lagrede objekter:
         {
             destinasjoner = savedInstanceState.getParcelableArrayList(DESTINASJONSLISTE);
-            // oppdaterDatasett();
+
+            // Grunnet at det kan være lenge siden sist synkronisering, oppdaterer vi alikevel:
+            oppdaterDatasett();
         }
 
         // Lager Google API Klient objekt:
-        if (mGoogleApiClient == null) {
+        if (mGoogleApiClient == null)
+        {
             GoogleApiClient.Builder apiBuilder = new GoogleApiClient.Builder(this);
             apiBuilder.addConnectionCallbacks(this);        /* ConnectionCallbacks-objekt */
             apiBuilder.addOnConnectionFailedListener(this); /* OnConnectionFailedListener-objekt */
@@ -124,15 +129,27 @@ public class ActivityCtrl extends Activity
             mGoogleApiClient = apiBuilder.build();
         }
 
-        // Lager kart og listepanel:
-        enhetensPosisjon = null;
-        visKart();
 
-        if(savedInstanceState != null && savedInstanceState.containsKey(AKTIVT_FRAGMENT))
+        // Laster inn korrekte fragmenter ved rotasjon:
+        if (savedInstanceState != null)
         {
-            activeFragement = getFragmentManager().getFragment(savedInstanceState, AKTIVT_FRAGMENT);
+            if (savedInstanceState.containsKey(AKTIVT_FRAGMENT))
+                activeFragement = getFragmentManager().getFragment(savedInstanceState, AKTIVT_FRAGMENT);
+            else // DETTE ER GRUNNET FEILEN BESKREVET I "onSaveInstanceState".
+                visDestinasjonsListe();
+
+            if (savedInstanceState.containsKey(KARTFRAGMENT))
+                kart = (FragmentMap) getFragmentManager().getFragment(savedInstanceState, KARTFRAGMENT);
+            else // DETTE ER GRUNNET FEILEN BESKREVET I "onSaveInstanceState".
+                visKart();
         }
-        else visDestinasjonsListe();
+        else
+        {
+            visDestinasjonsListe();
+            // Lager kart og listepanel:
+            enhetensPosisjon = null;
+            visKart();
+        }
     }
 
     @Override
@@ -162,8 +179,24 @@ public class ActivityCtrl extends Activity
     @Override
     protected void onSaveInstanceState(Bundle outState)
     {
+        // Lagrer destinasjonsliste:
         outState.putParcelableArrayList(DESTINASJONSLISTE, destinasjoner);
-        getFragmentManager().putFragment(outState, AKTIVT_FRAGMENT, activeFragement);
+
+        // LAGRER TIDLIGERE FRAGMENT:
+        // Try/catch er tilstede fordi jeg har støtt på en merkelig bug der hvis jeg
+        // rekker å trykke tilbakeknappen mens rotasjon skjer, krasjer appen med:
+        // "java.lang.IllegalStateException: Fragment FragmentDetailedInfo{950923d} is not
+        // currently in the FragmentManager".
+        try
+        {
+            getFragmentManager().putFragment(outState, AKTIVT_FRAGMENT, activeFragement);
+            getFragmentManager().putFragment(outState, KARTFRAGMENT, kart);
+        }
+        catch (IllegalStateException e)
+        {
+            Log.e(this.getClass().getSimpleName(), "HJELP! DETTE VAR EN VELDIG UVENTET FEIL.");
+            e.printStackTrace();
+        }
         super.onSaveInstanceState(outState);
     }
 
@@ -195,7 +228,7 @@ public class ActivityCtrl extends Activity
      * Viser innstillingspanel-holderen for å få hvit bakgrunn på
      * innstillingsvindu. Dette er egendefinert HACK for å unngå transparent
      * bakgrunn.
-     * @param vis panel eller ikke vis panel
+     * @param vis feilPanel eller ikke vis feilPanel
      */
     public void visInnstillingPanel(boolean vis)
     {
@@ -306,6 +339,7 @@ public class ActivityCtrl extends Activity
         leggTil.setArguments(argumenter);
 
         activeFragement = leggTil;
+        gåTilLokasjon();
 
         // Utfører transaksjonen.
         transaksjon.commit();
@@ -592,8 +626,6 @@ public class ActivityCtrl extends Activity
             return;
         }
 
-        fab.setVisibility(View.GONE);
-        skalerPanelVekting(0.8f);
         visLeggTilLokasjon();
     }
 
@@ -812,5 +844,17 @@ public class ActivityCtrl extends Activity
                         "Kan ikke vise posisjon uten tillatelse", Snackbar.LENGTH_LONG).show();
             }
         }
+    }
+
+    /**
+     * Oppdateringsfunskjon for når feilen at "arraylist" med destinasjoner
+     * er tom. Dette er en "Event handeler" for knappen under "feilPanelListe"
+     * i fragmentet "FragmentCloseLocationsList".
+     * @param view
+     */
+    public void oppdaterEtterFeil(View view)
+    {
+        oppdaterDatasett();
+        visDestinasjonsListe();
     }
 }

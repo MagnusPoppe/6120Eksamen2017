@@ -138,6 +138,9 @@ public class FragmentDetailedInfo extends Fragment
         super.onResume();
         ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
         aktivitet.setDetaljinfoVises(true);
+
+        aktivitet.skalerPanelVekting(.6f);
+        aktivitet.getLeggTilKnapp().setVisibility(View.VISIBLE);
     }
 
     /**
@@ -150,7 +153,7 @@ public class FragmentDetailedInfo extends Fragment
         super.onPause();
         ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
         aktivitet.setDetaljinfoVises(false);
-        // TODO: aktivitet.gåTilLokasjon();
+        // TODO: Bestem om aktivitet.gåTilLokasjon(); skal skje
     }
 
     /**

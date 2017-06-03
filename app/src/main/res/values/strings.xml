@@ -9,4 +9,9 @@
     <string name="markedBy">Markert av:</string>
     <string name="metersAboveSeaLevel">M.O.H.</string>
     <string name="perimissionDialog">Åpne tillateses dialog</string>
+
+    <!-- Errorstrenger: -->
+    <string name="update_list">Oppdater Liste</string>
+    <string name="empty_database">Feil har inntruffet med databaseinterasjon.</string>
+    <string name="list_empty">Destinasjonslisten er tom.</string>
 </resources>
