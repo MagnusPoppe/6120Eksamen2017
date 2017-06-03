@@ -39,7 +39,7 @@
                    android:value="AIzaSyAx9aILxzRlmwMnVSNMmnL4b2CZ6-F1JwE"/>
 
 
-        <activity android:name=".ActivityController">
+        <activity android:name=".ActivityCtrl">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

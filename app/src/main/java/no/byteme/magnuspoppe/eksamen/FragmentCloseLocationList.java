@@ -43,7 +43,7 @@ public class FragmentCloseLocationList extends Fragment
     public void onResume()
     {
         super.onResume();
-        ActivityController aktivitet = (ActivityController) getActivity();
+        ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
         aktivitet.skalerPanelVekting(.4f);
         aktivitet.getLeggTilKnapp().setVisibility(View.VISIBLE);
 
@@ -55,7 +55,7 @@ public class FragmentCloseLocationList extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
-        final ActivityController aktivitet = (ActivityController) getActivity();
+        final ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
 
         View view = inflater.inflate(R.layout.fragment_close_location_list, container, false);
 

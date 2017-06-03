@@ -29,9 +29,9 @@ public class AsynkronDestinasjon
     private boolean utførSlettingEtterOpplasting;
     private int[] skalSlettes;
 
-    ActivityController aktivitet;
+    ActivityCtrl aktivitet;
 
-    public AsynkronDestinasjon(ActivityController activity)
+    public AsynkronDestinasjon(ActivityCtrl activity)
     {
         this.aktivitet = activity;
         this.utførSlettingEtterOpplasting = false;

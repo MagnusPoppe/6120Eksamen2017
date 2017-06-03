@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.support.design.widget.Snackbar;
-import android.util.Log;
 import android.view.View;
 
 import java.io.DataOutputStream;
@@ -16,8 +15,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 
 /**
@@ -56,7 +53,7 @@ public class ImageHandler
         ContextWrapper cw = new ContextWrapper(context);
 
         // Lagres i /data/data/yourapp/app_data/
-        File directory = cw.getDir(ActivityController.FOTO_LAGER, Context.MODE_PRIVATE);
+        File directory = cw.getDir(ActivityCtrl.FOTO_LAGER, Context.MODE_PRIVATE);
 
         // Lager katalog:
         File katalog = new File(directory, filnavn + ".jpg");

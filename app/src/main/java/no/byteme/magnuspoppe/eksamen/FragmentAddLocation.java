@@ -1,8 +1,6 @@
 package no.byteme.magnuspoppe.eksamen;
 
 
-import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -23,11 +21,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
 import no.byteme.magnuspoppe.eksamen.datamodel.DestinasjonDB;
@@ -40,20 +35,26 @@ import static android.content.Context.MODE_PRIVATE;
  */
 public class FragmentAddLocation extends Fragment implements mellomLagerBildeKontrakt
 {
+
     // Data som skal lagres:
     Destinasjon denneDestinasjonen;
+    final static private String ULAGRET_DESTINASJON = "ulagret..";
+    private static final String BILDELAGRING = "Bilde lagring.";
+    private static final String LOKAL_STI = "lokalsti";
+    private static final String FILNAVN = "filanvøaklsdfj";
 
     // Inndata objekter:
     TextInputEditText innNavn, innType, innBeskrivelse;
     ImageView innBilde;
+    Bitmap bilde;
 
     // ID FOR TA BILDE:
     private static final int TA_BILDE_INTENT_ID = 2532523;
     private static final int BILDE_OK = -1;
-    // Strener brukt for opplasting av bilder
+
+    // strenger brukt for opplasting av bilder
     String lokalSti, filnavn, onlineSti;
     private final static String FILFORMAT = ".jpg";
-
 
     public FragmentAddLocation()
     {
@@ -72,6 +73,44 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
         StrictMode.setVmPolicy(builder.build());
     }
 
+
+    @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        if (denneDestinasjonen != null)
+            outState.putParcelable(ULAGRET_DESTINASJON, denneDestinasjonen);
+
+        if (bilde != null)
+        {
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bilde.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+            byte[] byteArray = stream.toByteArray();
+            outState.putByteArray(BILDELAGRING, byteArray);
+        }
+
+        if (lokalSti != null)
+        {
+            outState.putString(LOKAL_STI, lokalSti);
+            outState.putString(FILNAVN, filnavn);
+        }
+
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onViewStateRestored(Bundle savedInstanceState)
+    {
+        if (savedInstanceState != null)
+        {
+            if (savedInstanceState.containsKey(LOKAL_STI))
+                lokalSti = savedInstanceState.getString(LOKAL_STI);
+
+            if (savedInstanceState.containsKey(FILNAVN))
+                filnavn = savedInstanceState.getString(FILNAVN);
+        }
+        super.onViewStateRestored(savedInstanceState);
+    }
+
     @Override
     public void onResume()
     {
@@ -85,35 +124,28 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_add_location, container, false);
 
-        Bundle argumenter = getArguments();
-        if (argumenter != null)
-        {
-            denneDestinasjonen = new Destinasjon(
-                argumenter.getDouble("MOH"),
-                argumenter.getDouble("LAT"),
-                argumenter.getDouble("LNG")
-            );
-        }
-        else getFragmentManager().popBackStack();
-
-        SharedPreferences innstillinger =
-                getActivity().getSharedPreferences(ActivityController.INNSTILLINGER, MODE_PRIVATE);
-        denneDestinasjonen.setEier(innstillinger.getString("email", ""));
-
+        // Henter "Textviews" for forhåndsdefinert data:
         TextView innLat = (TextView) view.findViewById(R.id.legg_til_lat);
         TextView innLng = (TextView) view.findViewById(R.id.legg_til_lng);
         TextView innMoh = (TextView) view.findViewById(R.id.legg_til_moh);
-
-        innLat.setText(denneDestinasjonen.getKoordinat().latitude+"");
-        innLng.setText(denneDestinasjonen.getKoordinat().longitude+"");
-        innMoh.setText(denneDestinasjonen.getMoh() + " "
-                + getResources().getString(R.string.metersAboveSeaLevel));
 
         // Henter "TextInputEditText"
         innNavn         = (TextInputEditText) view.findViewById(R.id.inndataNavn);
         innType         = (TextInputEditText) view.findViewById(R.id.inndataType);
         innBeskrivelse  = (TextInputEditText) view.findViewById(R.id.inndataBeskrivelse);
 
+        // Bildeholder:
+        innBilde = (ImageView) view.findViewById(R.id.innBilde);
+        innBilde.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                taBilde();
+            }
+        });
+
+        // Lagreknapp:
         Button lagreKnapp = (Button) view.findViewById(R.id.inndataLagreKnapp);
         lagreKnapp.setOnClickListener(new View.OnClickListener()
         {
@@ -124,15 +156,43 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
             }
         });
 
-        innBilde = (ImageView) view.findViewById(R.id.innBilde);
-        innBilde.setOnClickListener(new View.OnClickListener()
+        // Kontroll på hvor fragmentet blir startet fra, og innehenting av data:
+        if (savedInstanceState != null && savedInstanceState.containsKey(ULAGRET_DESTINASJON))
         {
-            @Override
-            public void onClick(View v)
+            denneDestinasjonen = savedInstanceState.getParcelable(ULAGRET_DESTINASJON);
+            innNavn.setText(denneDestinasjonen.getNavn());
+            innType.setText(denneDestinasjonen.getType());
+            innBeskrivelse.setText(denneDestinasjonen.getBeskrivelse());
+
+            if (savedInstanceState.containsKey(BILDELAGRING))
             {
-                taBilde();
+                byte[] byteArray = savedInstanceState.getByteArray(BILDELAGRING);
+                bilde = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+                innBilde.setImageBitmap(bilde);
             }
-        });
+        }
+        else
+        {
+            Bundle argumenter = getArguments();
+            if (argumenter != null)
+            {
+                denneDestinasjonen = new Destinasjon(
+                        argumenter.getDouble("MOH"),
+                        argumenter.getDouble("LAT"),
+                        argumenter.getDouble("LNG")
+                );
+            }
+            else getFragmentManager().popBackStack();
+        }
+
+
+        SharedPreferences innstillinger =
+                getActivity().getSharedPreferences(ActivityCtrl.INNSTILLINGER, MODE_PRIVATE);
+        denneDestinasjonen.setEier(innstillinger.getString("email", ""));
+
+        innLat.setText(denneDestinasjonen.getKoordinat().latitude+"");
+        innLng.setText(denneDestinasjonen.getKoordinat().longitude+"");
+        innMoh.setText(denneDestinasjonen.getMoh() + " " + getResources().getString(R.string.metersAboveSeaLevel));
 
         return view;
     }
@@ -173,7 +233,7 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
 
         if (requestCode == TA_BILDE_INTENT_ID && resultCode == BILDE_OK)
         {
-            ActivityController aktivitet = (ActivityController) getActivity();
+            ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
             ImageHandler filhandtering = new ImageHandler(
                     aktivitet.getApplicationContext(),
                     getView(),
@@ -209,7 +269,7 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
         if (innBeskrivelse.getText().length() > 0)
             denneDestinasjonen.setBeskrivelse(""+innBeskrivelse.getText());
 
-        final ActivityController aktivitet = (ActivityController) getActivity();
+        final ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
 
         // Kontrollerer at brukerkonto er satt.
         if (denneDestinasjonen.getEier().equals("") && denneDestinasjonen.getEier() != null)
@@ -255,7 +315,7 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
      */
     private void lagreLokalt(Destinasjon destinasjon)
     {
-        ActivityController aktivtet = (ActivityController) getActivity();
+        ActivityCtrl aktivtet = (ActivityCtrl) getActivity();
         DestinasjonDB db = aktivtet.getDB();
         db.insertDestinasjon(destinasjon);
     }

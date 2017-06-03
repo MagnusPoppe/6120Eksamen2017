@@ -90,7 +90,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         // Flytter kamera til rikitg initiell posisjon
         googleKart.animateCamera(CameraUpdateFactory.newLatLngZoom(koordinat, YTRE_ZOOM));
 
-        final ActivityController aktivitet = (ActivityController) getActivity();
+        final ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
         aktivitet.settUtAlleMarkorer();
 
         listener = new GoogleMap.OnMarkerClickListener()
@@ -173,8 +173,8 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         {
             // Hvis koordinater finnes, skal de lagres.
             koordinat = new LatLng(
-                    argumenter.getDouble(ActivityController.HOVED_LATITIUDE),
-                    argumenter.getDouble(ActivityController.HOVED_LONGITUDE)
+                    argumenter.getDouble(ActivityCtrl.HOVED_LATITIUDE),
+                    argumenter.getDouble(ActivityCtrl.HOVED_LONGITUDE)
             );
             brukerEnhetPosisjon = false;
         }
@@ -182,7 +182,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         {
             // Hvis ikke kordinater finnes, skal enhetens posisjon hentes ut.
             brukerEnhetPosisjon = true;
-            ActivityController aktivitet = (ActivityController) getActivity();
+            ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
             koordinat = aktivitet.getEnhetensPosisjon();
         }
 

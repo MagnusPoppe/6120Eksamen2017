@@ -50,17 +50,17 @@ public class Preferences extends PreferenceFragment implements SharedPreferences
     public void onPause()
     {
         super.onPause();
-        ActivityController aktivitet = (ActivityController) getActivity();
+        ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
         aktivitet.visInnstillingPanel(false);
         getPreferenceScreen().getSharedPreferences().unregisterOnSharedPreferenceChangeListener(this);
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        ActivityController aktivitet = (ActivityController) getActivity();
+        ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
 
         SharedPreferences preferences =
-                aktivitet.getSharedPreferences(ActivityController.INNSTILLINGER, 0);
+                aktivitet.getSharedPreferences(ActivityCtrl.INNSTILLINGER, 0);
 
         SharedPreferences.Editor editor = preferences.edit();
 

@@ -3,6 +3,7 @@ package no.byteme.magnuspoppe.eksamen;
 import android.Manifest;
 import android.animation.LayoutTransition;
 import android.app.Activity;
+import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -38,7 +39,7 @@ import no.byteme.magnuspoppe.eksamen.datamodel.DestinasjonDB;
 /**
  * Dette er kontrolleren for hele applikasjonen.
  */
-public class ActivityController extends Activity
+public class ActivityCtrl extends Activity
         implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         mellomLagerKontrakt
@@ -47,11 +48,15 @@ public class ActivityController extends Activity
     // Konstanter
     public static final String HOVED_LATITIUDE = "kldaføjsefølakjdf";
     public static final String HOVED_LONGITUDE = "asløkdsalskdjfkal";
-    private static final String DESTINASJONSLISTE = "jlkd";
-
     private static final LatLng HOYSKOLEN = new LatLng(59.408852, 9.059512);
     public static final String INNSTILLINGER = "no.byteme.magnuspoppe.eksamen.preferences";
     public static final String FOTO_LAGER="images";
+
+    // ID på forskjellig lagret i "SavedInstanceState":
+    private static final String DESTINASJONSLISTE = "liste..";
+    public static final String UTVALGT = "SELECTED_DESTINATION";
+    private static final String AKTIVT_FRAGMENT = "aklsd";
+
     // "STATE":
     private boolean detaljinfoVises;
 
@@ -63,6 +68,7 @@ public class ActivityController extends Activity
     private Location lokasjon = null;
     private FragmentMap kart;
     private FragmentCloseLocationList destinasjonsliste;
+    private Fragment activeFragement;
 
     // Grafiske views:
     private LinearLayout bunnPanel;
@@ -96,6 +102,7 @@ public class ActivityController extends Activity
 
         db = new DestinasjonDB(getApplicationContext());
 
+        // Henter ut "state":
         if(savedInstanceState == null || !savedInstanceState.containsKey(DESTINASJONSLISTE))
         {
             // Henter ut destinasjonsdata asynkront:
@@ -105,7 +112,7 @@ public class ActivityController extends Activity
         else // Inneholder lagrede objekter:
         {
             destinasjoner = savedInstanceState.getParcelableArrayList(DESTINASJONSLISTE);
-            oppdaterDatasett();
+            // oppdaterDatasett();
         }
 
         // Lager Google API Klient objekt:
@@ -120,7 +127,12 @@ public class ActivityController extends Activity
         // Lager kart og listepanel:
         enhetensPosisjon = null;
         visKart();
-        visDestinasjonsListe();
+
+        if(savedInstanceState != null && savedInstanceState.containsKey(AKTIVT_FRAGMENT))
+        {
+            activeFragement = getFragmentManager().getFragment(savedInstanceState, AKTIVT_FRAGMENT);
+        }
+        else visDestinasjonsListe();
     }
 
     @Override
@@ -151,6 +163,7 @@ public class ActivityController extends Activity
     protected void onSaveInstanceState(Bundle outState)
     {
         outState.putParcelableArrayList(DESTINASJONSLISTE, destinasjoner);
+        getFragmentManager().putFragment(outState, AKTIVT_FRAGMENT, activeFragement);
         super.onSaveInstanceState(outState);
     }
 
@@ -171,6 +184,8 @@ public class ActivityController extends Activity
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
         transaksjon.replace(R.id.innstillingFragmentHolder, innstillingFragment);
         transaksjon.addToBackStack(null);
+
+        activeFragement = innstillingFragment;
 
         // Utfører transaksjonen.
         transaksjon.commit();
@@ -199,6 +214,8 @@ public class ActivityController extends Activity
         destinasjonsliste = new FragmentCloseLocationList();
         FragmentTransaction transaksjon = getFragmentManager().beginTransaction();
         transaksjon.replace(R.id.ListeFragmentHolder, destinasjonsliste);
+
+        activeFragement = destinasjonsliste;
 
         // Utfører transaksjonen.
         transaksjon.commit();
@@ -233,10 +250,13 @@ public class ActivityController extends Activity
         transaksjon.replace(R.id.ListeFragmentHolder, detaljinfo);
         transaksjon.addToBackStack(null);
 
+
         // Legger ved hvilken destinasjon som ble valgt.
         Bundle argumenter = new Bundle();
-        argumenter.putInt("SELECTED_DESTINATION", indeksDestinasjon);
+        argumenter.putInt(UTVALGT, indeksDestinasjon);
         detaljinfo.setArguments(argumenter);
+
+        activeFragement = detaljinfo;
 
         // Utfører transaksjonen.
         transaksjon.commit();
@@ -277,12 +297,15 @@ public class ActivityController extends Activity
         transaksjon.replace(R.id.ListeFragmentHolder, leggTil);
         transaksjon.addToBackStack(null);
 
+
         // Legger ved informasjon om nåværende posisjon:
         Bundle argumenter = new Bundle();
         argumenter.putDouble("MOH", lokasjon.getAltitude());
         argumenter.putDouble("LAT", lokasjon.getLatitude());
         argumenter.putDouble("LNG", lokasjon.getLongitude());
         leggTil.setArguments(argumenter);
+
+        activeFragement = leggTil;
 
         // Utfører transaksjonen.
         transaksjon.commit();
@@ -361,7 +384,7 @@ public class ActivityController extends Activity
      * Gjør spørring mot lokal database for å se om det er oppføringer
      * i databasen som ikke finnes på nett. Hvis finnes, skal de lastes opp,
      * så slettes lokalt. Slettingen gjøres ved CallBack.
-     * Callback metode: ActivityController.vedKomplettOpplastingAvDestinasjoner()
+     * Callback metode: ActivityCtrl.vedKomplettOpplastingAvDestinasjoner()
      */
     protected void lastOppMidlertidigLagret()
     {
