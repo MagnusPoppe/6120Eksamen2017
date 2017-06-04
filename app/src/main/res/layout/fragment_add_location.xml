@@ -17,6 +17,12 @@
             android:textSize="@dimen/veryLargeText"
             android:textAppearance="@android:style/TextAppearance.Material.Headline"/>
 
+        <!--
+        INNDATA FELTENE:
+        Jeg valgte å bruke TextInputEditText fordi dette er en "Material Design"
+        måte å bruke inndatafelter på. Denne er fancy og får GUI til å virke mer levende.
+        -->
+
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">

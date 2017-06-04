@@ -31,29 +31,37 @@ import static android.content.Context.MODE_PRIVATE;
 
 
 /**
- * A simple {@link Fragment} subclass.
+ *  Et fragment for å registrere nye turmål. Dette fragmentet er
+ *  bygd opp med inndata felter og mulighet for å fange bilde.
+ *  Øvrig informasjon settes på forhånd.
+ *
+ *  Det er også lagt opp for mellomlagring i lokal database om nødvendig.
+ *  Dette systemet lagrer brukerens inndata på det mest minimale for å så
+ *  laste det opp til global database når mulig.
  */
 public class FragmentAddLocation extends Fragment implements mellomLagerBildeKontrakt
 {
 
     // Data som skal lagres:
     Destinasjon denneDestinasjonen;
-    final static private String ULAGRET_DESTINASJON = "ulagret..";
+
+    // Konstanter for mellomlagring ved rotasjon:
+    private static final String ULAGRET_DESTINASJON = "ulagret..";
     private static final String BILDELAGRING = "Bilde lagring.";
     private static final String LOKAL_STI = "lokalsti";
     private static final String FILNAVN = "filanvøaklsdfj";
 
     // Inndata objekter:
-    TextInputEditText innNavn, innType, innBeskrivelse;
-    ImageView innBilde;
-    Bitmap bilde;
+    TextInputEditText innNavn, innType, innBeskrivelse; // Tekst
+    ImageView innBilde;                                 // Bildevisning
+    Bitmap bilde;                                       // Bildet
 
     // ID FOR TA BILDE:
     private static final int TA_BILDE_INTENT_ID = 2532523;
-    private static final int BILDE_OK = -1;
+    private static final int BILDE_OK = -1;     // "OK" statuskode for ACTION_IMAGE_CAPTURE
 
-    // strenger brukt for opplasting av bilder
-    String lokalSti, filnavn, onlineSti;
+    // Strenger brukt for opplasting av bilder
+    String lokalSti, filnavn;
     private final static String FILFORMAT = ".jpg";
 
     public FragmentAddLocation()
@@ -73,13 +81,30 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
         StrictMode.setVmPolicy(builder.build());
     }
 
-
+    /**
+     * Lagrer nødvendig data for å hente opp igjen samme
+     * fragmentet om f.eks. rotasjon skjer.
+     *
+     * Det meste lagres i destinasjon når det blir lagret
+     * og dermed er dette enkel måte å hente ut på.
+     *
+     * Bildet lagres også som en bytetabell for å så kunne hentes opp
+     * igjen.
+     *
+     * Sti for bildeplassering lokalt og filnavn må lagres i det sannsynlige
+     * tilfellet at enheten returnerer fra en "ta bilde" intent med annen
+     * rotasjon enn det en gikk inn med.
+     *
+     * @param outState data som lagres
+     */
     @Override
     public void onSaveInstanceState(Bundle outState)
     {
+        // Lagrer lokasjonsinformasjon
         if (denneDestinasjonen != null)
             outState.putParcelable(ULAGRET_DESTINASJON, denneDestinasjonen);
 
+        // Lagrer bildet:
         if (bilde != null)
         {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -88,6 +113,7 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
             outState.putByteArray(BILDELAGRING, byteArray);
         }
 
+        // Lagrer stier:
         if (lokalSti != null)
         {
             outState.putString(LOKAL_STI, lokalSti);
@@ -97,26 +123,34 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
         super.onSaveInstanceState(outState);
     }
 
+    /**
+     * Henter ut dataene som ble lagret ved rotasjon.
+     * @param savedInstanceState bundle med data som skal lagres
+     */
     @Override
     public void onViewStateRestored(Bundle savedInstanceState)
     {
+        // Hvis data er blitt mellomlagret
         if (savedInstanceState != null)
         {
+            // Henter lokal sti
             if (savedInstanceState.containsKey(LOKAL_STI))
                 lokalSti = savedInstanceState.getString(LOKAL_STI);
 
+            // Henter filnavn
             if (savedInstanceState.containsKey(FILNAVN))
                 filnavn = savedInstanceState.getString(FILNAVN);
         }
         super.onViewStateRestored(savedInstanceState);
     }
 
-    @Override
-    public void onResume()
-    {
-        super.onResume();
-    }
-
+    /**
+     * Lager selve viewet:
+     * @param inflater  Blåser opp layout
+     * @param container Holder på view:
+     * @param savedInstanceState lagrede data
+     * @return ferdig konfigurert fragment view
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
@@ -160,11 +194,13 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
         // Kontroll på hvor fragmentet blir startet fra, og innehenting av data:
         if (savedInstanceState != null && savedInstanceState.containsKey(ULAGRET_DESTINASJON))
         {
+            // Setter tekstfeltene til det de var før rotasjon:
             denneDestinasjonen = savedInstanceState.getParcelable(ULAGRET_DESTINASJON);
             innNavn.setText(denneDestinasjonen.getNavn());
             innType.setText(denneDestinasjonen.getType());
             innBeskrivelse.setText(denneDestinasjonen.getBeskrivelse());
 
+            // Henter bilde hvis det var tatt:
             if (savedInstanceState.containsKey(BILDELAGRING))
             {
                 byte[] byteArray = savedInstanceState.getByteArray(BILDELAGRING);
@@ -172,72 +208,114 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
                 innBilde.setImageBitmap(bilde);
             }
         }
-        else
+        else // Normal oppstart:
         {
+            // Tre datafelter om lokasjon skal være sendt med:
             Bundle argumenter = getArguments();
             if (argumenter != null)
             {
+                // Destinasjonsdata som ble sendt med:
                 denneDestinasjonen = new Destinasjon(
                         argumenter.getDouble("MOH"),
                         argumenter.getDouble("LAT"),
                         argumenter.getDouble("LNG")
                 );
             }
+            // Hvis ikke disse datafeltene var sendt med tvinger vi bruker
+            // tilbake til listefragmentet:
             else getFragmentManager().popBackStack();
         }
 
+        // Henter brukernavn fra shared preferences:
         ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
         SharedPreferences innstillinger =
                 aktivitet.getSharedPreferences(ActivityCtrl.INNSTILLINGER, MODE_PRIVATE);
         denneDestinasjonen.setEier(innstillinger.getString("email", ""));
 
+        // Setter tekstfelter med lokasjonsdata:
         innLat.setText(denneDestinasjonen.getKoordinat().latitude+"");
         innLng.setText(denneDestinasjonen.getKoordinat().longitude+"");
         innMoh.setText(denneDestinasjonen.getMoh() + " " + getResources().getString(R.string.metersAboveSeaLevel));
 
-
+        // Fjerner legg til knapp og skalerer panelet til korrekt størrelse
         aktivitet.getLeggTilKnapp().setVisibility(View.GONE);
-        aktivitet.skalerPanelVekting(0.6f);
+        aktivitet.skalerPanelVekting(ActivityCtrl.STORT_PANEL);
 
         return view;
     }
 
+    /**
+     * Metode for å starte kamera intent med ACTION_IMAGE_CAPTURE.
+     * Metoden gjør klart for å ta bilde ved å lage filene på
+     * forhånd. Disse filene skal forsikre om at man finner
+     * tilbake til bildet etter det ble tatt. Selve intentet
+     * returnerer ingen data siden FileProvider lagrer bildet
+     * for kameraintentet.
+     *
+     * Deler av mønster funnet her:
+     * https://stackoverflow.com/questions/38555301/android-taking-picture-with-fileprovider
+     * og her:
+     * https://developer.android.com/reference/android/support/v4/content/FileProvider.html
+     */
     public void taBilde()
     {
         // Lagrer intent for å åpne kamera:
         Intent taBildeIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
+        // Lager filnavnet:
         filnavn = "_" + System.currentTimeMillis() + FILFORMAT;
 
         // Lager filen som bildet skal være:
-        File imagePath = new File(getActivity().getApplicationContext().getExternalFilesDir("external_files"), "");
+        File imagePath = new File(
+                getActivity().getApplicationContext().getExternalFilesDir("external_files"), ""
+        );
         File file = new File(imagePath, filnavn);
 
+        // Lagerer lokal sti i tilfellet rotasjon mens kamera er i bruk:
         lokalSti = imagePath.getPath();
 
+        // Lagrer URI for hvor kamera intent skal lagre bildet:
         final Uri outputUri = FileProvider.getUriForFile(
                 getActivity(),
                 "no.byteme.fileprovider",
                 file);
         taBildeIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputUri);
 
+        // Gir kamera tillatelse til å skrive bildefil:
         getActivity().getApplicationContext().grantUriPermission(
                 "com.google.android.GoogleCamera",
                 outputUri,
                 Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION
         );
 
+        // Starter kamera:
         if (taBildeIntent.resolveActivity(getActivity().getPackageManager()) != null)
             startActivityForResult(taBildeIntent, TA_BILDE_INTENT_ID);
     }
 
+    /**
+     * Denne metoden kjører som resultat av at en intent er blitt
+     * brukt. I dette fragmentet er det kamera appen som blir brukt.
+     * Kunne gjerne vært fler inteneter i en app.
+     *
+     * @param requestCode hvilken app som returnerer
+     * @param resultCode resultatet fra intent
+     * @param data Data hvis det medfølger.
+     *
+     * Deler av mønster funnet her:
+     * https://stackoverflow.com/questions/38555301/android-taking-picture-with-fileprovider
+     * og her:
+     * https://developer.android.com/reference/android/support/v4/content/FileProvider.html
+     */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data)
     {
         super.onActivityResult(requestCode, resultCode, data);
 
+        // Sjekker om kamera returnerer og om resulatet er OK:
         if (requestCode == TA_BILDE_INTENT_ID && resultCode == BILDE_OK)
         {
+            // Åpner egen filhåndteringsklasse:
             ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
             ImageHandler filhandtering = new ImageHandler(
                     aktivitet.getApplicationContext(),
@@ -252,7 +330,6 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
             // Laster opp bildet:
             filhandtering.lastOppBilde(lokalSti, filnavn);
 
-            // Skjuler "legg til" knapp (blir satt tilbake når listen vises igjen):
             // Skjuler "legg til" knapp (blir satt tilbake når listen vises igjen):
             aktivitet.getLeggTilKnapp().setVisibility(View.GONE);
         }
@@ -291,17 +368,14 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
             return;
         }
 
-        // Lagrer bildet lokalt på telefonen:
-        // BitmapDrawable bilde = (BitmapDrawable)innBilde.getDrawable();
-        // lagreBilde(bilde.getBitmap());
-
+        // Hvis det er internett forbindelse skal appen laste opp lokasjonen:
         if(aktivitet.harInternettForbindelse())
         {
             AsynkronDestinasjon oppgave = new AsynkronDestinasjon(aktivitet);
             oppgave.post(denneDestinasjonen);
             denneDestinasjonen.setiGlobalDatabase(true);
         }
-        else
+        else // Hvis det ikke er internett mellomlagrer appen lokasjonen:
         {
             Snackbar.make(getView(), "Ingen nettilgang. Turmål blir lastet opp senere.",
                     Snackbar.LENGTH_LONG).show();
@@ -309,6 +383,7 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
             lagreLokalt(denneDestinasjonen);
         }
 
+        // Legger til destinasjon i listen av destinasjoner og returnerer til listen.
         aktivitet.leggTilDestinasjon(denneDestinasjonen);
         getFragmentManager().popBackStack();
     }
@@ -320,6 +395,7 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
      */
     private void lagreLokalt(Destinasjon destinasjon)
     {
+        // Lagrer i lokal database:
         ActivityCtrl aktivtet = (ActivityCtrl) getActivity();
         DestinasjonDB db = aktivtet.getDB();
         db.insertDestinasjon(destinasjon);
@@ -327,6 +403,10 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
 
     /**
      * Callback metode kalt på fra ImageHandeler klassen.
+     * Denne setter korrekt sti til blidet om etter forsøk
+     * på opplasting:
+     *
+     * NOTAT: Ikke enda implementert "etteropplasting av bilde".
      */
     @Override
     public void vedKomplettOpplastingAvBilde(boolean fullført)

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Vekting ble plassert i egen ressursfil fordi en vanlig dimens
-    fil krever måleenhet (dp, sp, pt, px, mm, in) bak tallet. Dette
-    brukes ikke med "weight" attributten.
+    Vekting ble plassert i egen ressursfil fordi en vanlig dimens ressurs
+    i dimens ressursfil krever måleenhet (dp, sp, pt, px, mm, in) bak tallet.
+    Dette brukes ikke med "weight" attributten.
 -->
 <resources>
     <!-- FOR NORMALE ENHETER: -->

@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,16 +24,33 @@ import static no.byteme.magnuspoppe.eksamen.ActivityCtrl.UTVALGT;
 
 
 /**
- * A simple {@link Fragment} subclass.
+ * Dette fragmentet viser detaljert informasjon om et fragment.
+ * Detaljert informasjon vil si alle data vi har om en destinasjon/
+ * turmål.
+ *
+ * Informasjonen er:
+ * Navn på turmål
+ * Typen turmål
+ * Beskrivelse av turmålet
+ * M.O.H., Hvor mange meter over havet turmålet befinner seg
+ * Bilde av turmålet om det finnes.
+ * Hvem som markerete turmålet (epost adresse)
+ * Posisjon turmålet er på kartet, med smud animasjon til destinasjon.
  */
+
 public class FragmentDetailedInfo extends Fragment
 {
-
+    // For mellomlagring av bildet ved rotasjon
     private static final String BILDELAGRING = "BILDET";
+
+    // Kontrolleren:
     ActivityCtrl aktivitet;
+
+    // Bildet:
     ImageView detaljbilde;
     Bitmap bilde;
 
+    // Hvilket element turmålet er i arraylisten (datasettet):
     private int utvalgt;
 
     public FragmentDetailedInfo()
@@ -40,10 +58,19 @@ public class FragmentDetailedInfo extends Fragment
         // Required empty public constructor
     }
 
+    /**
+     * Lagerer data før eventuell rotasjon eller annet.
+     * Lagerer indeks til Destinasjonselement i datasettet til
+     * kontrolleren.
+     * Lagerer også bildet som en bytestrøm for raskere innlasting.
+     * @param outState bundle som blir lagret.
+     */
     @Override
     public void onSaveInstanceState(Bundle outState)
     {
         super.onSaveInstanceState(outState);
+
+        // Indeks:
         outState.putInt(UTVALGT, utvalgt);
 
         // Lagrer bildet for raskere innhenting:
@@ -56,6 +83,13 @@ public class FragmentDetailedInfo extends Fragment
         }
     }
 
+    /**
+     * Lager selve viewet:
+     * @param inflater  Blåser opp layout
+     * @param container Holder på view:
+     * @param savedInstanceState lagrede data
+     * @return ferdig konfigurert fragment view
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
@@ -96,7 +130,8 @@ public class FragmentDetailedInfo extends Fragment
                 }
             }
         }
-        else {
+        else // Første åpning av detaljvisning:
+        {
             Bundle args = getArguments();
             if (args == null || !args.containsKey(UTVALGT))
             {
@@ -123,8 +158,6 @@ public class FragmentDetailedInfo extends Fragment
         txtMoh.setText(destinasjon.getMoh()+"");
         txtEier.setText(destinasjon.getEier());
 
-        // TODO: Åpne intent for å vise i google maps + knapp for å aktivere.
-
         return view;
     }
 
@@ -136,11 +169,10 @@ public class FragmentDetailedInfo extends Fragment
     public void onResume()
     {
         super.onResume();
-        ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
+        // Setter grafiske elementer ettersom at vinduet vises:
         aktivitet.setDetaljinfoVises(true);
-
-        aktivitet.skalerPanelVekting(.6f);
-        aktivitet.getLeggTilKnapp().setVisibility(View.VISIBLE);
+        aktivitet.skalerPanelVekting(ActivityCtrl.STORT_PANEL);
+        aktivitet.getLeggTilKnapp().setVisibility(View.GONE);
     }
 
     /**
@@ -158,6 +190,8 @@ public class FragmentDetailedInfo extends Fragment
 
     /**
      * En egen asynkron oppgave for å laste ned et enkelt bilde med oppgitt url.
+     * Følger samme mønster som andre Asynkrone oppgaver, men med en litt
+     * forenklet versjon:
      */
     private class DownloadImageTask extends AsyncTask<String, Void, Long>
     {
@@ -167,7 +201,7 @@ public class FragmentDetailedInfo extends Fragment
         Bitmap bmp;
 
         /**
-         * Denne oppgaven kjører faktisk på egen tråd. Her lastes bildet ned.
+         * Denne oppgaven kjører på egen tråd. Her lastes bildet ned.
          * @param parameter Forventer kun en. Dette skal være URL til bildet.
          * @return OK hvis alt gikk fint, FEIL utenom.
          */
@@ -180,6 +214,7 @@ public class FragmentDetailedInfo extends Fragment
                 URL url = new URL(parameter[0]);
                 bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
             }
+            // hvis feil intreffer:
             catch (IOException e)
             {
                 return FEIL;
@@ -201,8 +236,16 @@ public class FragmentDetailedInfo extends Fragment
                 detaljbilde.setImageBitmap(bilde); // Vi er på UI tråd og kan sette på bildet.
             }
             else // NOE GIKK FEIL.
+            {
                 // Si ifra til brukeren at en feil skjedde.
+                if (getView() != null)
+                    Snackbar.make(
+                            getView(),
+                            getResources().getString(R.string.imageError),
+                            Snackbar.LENGTH_SHORT
+                    ).show();
                 Log.e("Async image error", getResources().getString(R.string.imageError));
+            }
         }
     }
 }

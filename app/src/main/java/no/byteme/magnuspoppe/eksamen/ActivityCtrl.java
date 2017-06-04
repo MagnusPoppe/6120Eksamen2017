@@ -58,6 +58,15 @@ public class ActivityCtrl extends Activity
     public static final String FOTO_LAGER="images";
     public final static int REQUEST_LOCATION = 1;
 
+    // PANEL STØRRELSER:
+    // Jeg skulle gjerne lagret dette som verdier i dimens
+    // (R.dimens.stortpanel) osv, men dette går ikke fordi
+    // jeg får "resource not found" feilmeldinger. Dette
+    // er nok pga. spesialverdier. Les mer i
+    // "res/values/weighting.xml".
+    public static final float STORT_PANEL = .6f;
+    public static final float LITE_PANEL = .4f;
+
     // ID på forskjellig lagret i "SavedInstanceState":
     private static final String DESTINASJONSLISTE = "liste..";
     public static final String UTVALGT = "SELECTED_DESTINATION";

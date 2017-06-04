@@ -18,17 +18,24 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
- * Enkel klasse for å håndtere alt av bildebehandling.
- * Denne klassen kan lagre bilder lokalt og til netttjener gjennom FTP protokollen.
+ * Enkel klasse for å håndtere alt av bildebehandling. Denne klassen kan
+ * lagre bilder lokalt og til tjener gjennom HTTP protokollen.
  * Created by MagnusPoppe on 01/06/2017.
  */
 
 public class ImageHandler
 {
+    // Nødvendige objekter:
     private Context context;
     private View view;
     private FragmentAddLocation fragment;
 
+    /**
+     * Konstruktør
+     * @param context   For lagring
+     * @param view      For visning av feilmeldinger
+     * @param fragment  For bruk av callback
+     */
     public ImageHandler(Context context, View view, FragmentAddLocation fragment)
     {
         this.context = context;
@@ -38,9 +45,9 @@ public class ImageHandler
 
 
     /**
-     * Metode for å lagre bilder. Jeg så at dine foiler for henting av bilder allerede var
-     * veldig utdatert, så jeg valgte å hente ut en metode fra nettet selv.
-     * Metoden er tilpasset appen.
+     * Metode for å lagre bilder. Jeg så at forlesnings "foiler" for
+     * henting av bilder allerede var utdatert, så jeg valgte å hente
+     * ut en metode fra nettet selv. Metoden er tilpasset appen.
      *
      * Metode hentet fra StackOverflow:
      * https://stackoverflow.com/questions/17674634/saving-and-reading-bitmaps-images-from-internal-memory-in-android
@@ -52,13 +59,14 @@ public class ImageHandler
     {
         ContextWrapper cw = new ContextWrapper(context);
 
-        // Lagres i /data/data/yourapp/app_data/
+        // Lager katalog: Lagres i /data/data/yourapp/app_data/
         File directory = cw.getDir(ActivityCtrl.FOTO_LAGER, Context.MODE_PRIVATE);
-
-        // Lager katalog:
         File katalog = new File(directory, filnavn + ".jpg");
 
+
         FileOutputStream outputStream = null;
+
+        // Forsøker å lagre bildet:
         try
         {
             outputStream = new FileOutputStream(katalog);
@@ -72,7 +80,7 @@ public class ImageHandler
                 Snackbar.make(view, "Feil ved lagring av bilde.",Snackbar.LENGTH_LONG).show();
             return null;
         }
-        finally
+        finally // lukker outputstream uansett.
         {
             try
             {
@@ -83,13 +91,10 @@ public class ImageHandler
                 e.printStackTrace();
             }
         }
-        return directory.getAbsolutePath();
+        return directory.getAbsolutePath(); // Adressen til der bildet ble lagret.
     }
-
-    /**
+    /*
      * Metode for å hente ut bilder fra lager.
-     * Metoden er tilpasset mitt eget bruk, men hentet fra:
-     * https://stackoverflow.com/questions/17674634/saving-and-reading-bitmaps-images-from-internal-memory-in-android
      * @param sti til bildekatalogen
      * @param filnavn på bildet
      */
@@ -98,8 +103,14 @@ public class ImageHandler
         return lastInnBilde(sti+"/"+filnavn);
     }
 
+    /**
+     * Metode for å hente ut bilder fra lager.
+     * Metoden er tilpasset mitt eget bruk, men hentet fra:
+     * https://stackoverflow.com/questions/17674634/saving-and-reading-bitmaps-images-from-internal-memory-in-android
+     */
     public Bitmap lastInnBilde(String fullStiOgNavn)
     {
+        // Laster inn bilde:
         Bitmap bilde = null;
         try
         {
@@ -114,6 +125,13 @@ public class ImageHandler
         return bilde;
     }
 
+    /**
+     * Laster inn bildefil fra disk og returnerer det
+     * som input stream. Denne metoden er kun til for bruk med
+     * AsynkronLastOppBildeTask.
+     * @param fullStiOgNavn til bildet
+     * @return
+     */
     private FileInputStream lastInnBildeFil(String fullStiOgNavn)
     {
         FileInputStream io = null;
@@ -130,10 +148,15 @@ public class ImageHandler
         return io;
     }
 
+    // Konstanter for bruk ved opplasting av bilde:
     final static public String URL = "http://byteme.no/image/6120BilderEksamen/";
     final static public String SCRIPT = "uploadImage.php";
 
-
+    /**
+     * Laster opp et bilde til oppgitt tjener.
+     * @param sti til bildet
+     * @param navn på filen som skal lastes opp.
+     */
     public void lastOppBilde(String sti, String navn)
     {
         AsynkronLastOppBilde opplaster = new AsynkronLastOppBilde();

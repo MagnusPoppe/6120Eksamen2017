@@ -23,10 +23,16 @@ import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
 
 /**
  * Dette fragmentet inneholder kartet som vises på
- * forsiden av appen.
+ * forsiden av appen. Dette er det mest viste fragmentet
+ * av alle fragmentene.
+ *
+ * Jeg valgte å lage mitt eget fragment over "MapFragment"
+ * fragmentet til google. Dette er for å få egen
+ * funksjonalitet oppå google sin funksjonalitet.
  */
 public class FragmentMap extends Fragment implements OnMapReadyCallback
 {
+    // Mellomlagring av Posisjonselementer:
     private static final String ENHETPOS = "brukerEnhetPosisjon";
     private static final String CAM = "CAMERA";
 
@@ -43,14 +49,11 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
     // Liste for markøerer lagt ut på kartet:
     ArrayList<MyMarker> markorer;
 
+    // Standarder for zooming:
     final static private int STANDARD_ZOOM = 16;
     final static private int YTRE_ZOOM = 10;
 
-    public boolean isBrukerEnhetPosisjon()
-    {
-        return brukerEnhetPosisjon;
-    }
-
+    // Bool for å vite om man bruker enhetens posisjon:
     boolean brukerEnhetPosisjon;
 
     public FragmentMap()
@@ -58,12 +61,12 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         // Required empty public constructor
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-    }
-
+    /**
+     * Lagrer data nødvendig for å vise kartet slik som det sist så.
+     * Denne lagrer "CameraPosition" objekt for mest mulig fullstendige
+     * data om kameraet.
+     * @param outState bundle som blir lagret.
+     */
     @Override
     public void onSaveInstanceState(Bundle outState)
     {
@@ -71,16 +74,6 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         outState.putBoolean(ENHETPOS, brukerEnhetPosisjon);
         super.onSaveInstanceState(outState);
     }
-
-//    @Override
-//    public void onViewStateRestored(Bundle savedInstanceState)
-//    {
-//        super.onViewStateRestored(savedInstanceState);
-//        if (savedInstanceState != null && savedInstanceState.containsKey(CAM))
-//        {
-//            kamera = savedInstanceState.getParcelable(CAM);
-//        }
-//    }
 
     /**
      * onMapReady lastes inn da kartet er ferdig med sin asynkrone oppgave.
@@ -97,10 +90,10 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         googleKart.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
 
         // Tillatelsen er allerede hentet på dette punktet.
-        // Try catch for å ikke støte på feilmelidnger.
+        // Try/catch for å ikke støte på feilmelidnger.
         try {
             googleKart.setMyLocationEnabled(true);
-            googleKart.getUiSettings().setMyLocationButtonEnabled(false); // Denne er på menubar.
+            googleKart.getUiSettings().setMyLocationButtonEnabled(false); // Denne er på menu.
         }
         catch (SecurityException e)
         {
@@ -112,15 +105,16 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         }
 
         // Flytter kamera til rikitg initiell posisjon
-        if (this.kamera != null)
+        if (this.kamera != null) // Hvis gjenopprettet:
         {
             googleKart.moveCamera(CameraUpdateFactory.newCameraPosition(kamera));
         }
-        else
+        else // hvis første start:
         {
             googleKart.moveCamera(CameraUpdateFactory.newLatLngZoom(koordinat, YTRE_ZOOM));
         }
 
+        // Henter kontroller:
         final ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
         aktivitet.settUtAlleMarkorer();
 
@@ -130,6 +124,9 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
             @Override
             public boolean onMarkerClick(Marker marker)
             {
+                // Denne lytteren bruker egenlagd klasse for Markører
+                // for å benytte meg av equals metode for å oppdage korrekt
+                // markør:
                 for (MyMarker markor : markorer)
                 {
                     if (markor.equals(marker))
@@ -153,6 +150,11 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         });
     }
 
+    /**
+     * Enkel boolean for å bestemme om man får lov til å styre kartet
+     * eller ikke.
+     * @param paa om kartet skal kunne brukes. True betyr ja.
+     */
     public void kanInteragere(Boolean paa)
     {
         googleKart.getUiSettings().setAllGesturesEnabled(paa);
@@ -187,15 +189,20 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
     {
         if (googleKart != null)
         {
+            // Plasserer markor på kartet
             googleKart.addMarker(new MarkerOptions()
                     .position(posisjon)
                     .draggable(false)
                     .title(destinasjon.getNavn())
             );
+            // Lagrer i listen for gjenoppdaging:
             markorer.add(new MyMarker(destinasjon.getNavn(),destinasjon));
         }
     }
 
+    /**
+     * Fjerner alle markører på kartet og tømmer markør listen:
+     */
     public void fjernAlleMarkorer()
     {
         if (googleKart != null)
@@ -205,6 +212,13 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
             markorer.clear();
     }
 
+    /**
+     * Lager selve viewet:
+     * @param inflater  Blåser opp layout
+     * @param container Holder på view:
+     * @param savedInstanceState lagrede data
+     * @return ferdig konfigurert fragment view
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
@@ -213,9 +227,10 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         // Henter ut koordinater fra bundle:
         Bundle argumenter = this.getArguments();
 
+        // Liste av alle markører på kartet:
         markorer = new ArrayList<>();
 
-        // <b>OM STATE FOR KARTFRAGMENTET<b>:
+        // OM STATE FOR KARTFRAGMENTET:
         // Henter ut koordinater. Dette tilfellet av å beholde "STATE" for
         // fragmentet var vanskelig. Det er ikke mulig å lagre "MapFragment"
         // fordi, av en eller annen merkelig grunn får jeg ikke typetivnget den?
@@ -257,5 +272,13 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
 
         // Lager view:
         return view;
+    }
+
+    /**
+     * @return sant hvis enhetens posisjon er i bruk, eller usant.
+     */
+    public boolean isBrukerEnhetPosisjon()
+    {
+        return brukerEnhetPosisjon;
     }
 }

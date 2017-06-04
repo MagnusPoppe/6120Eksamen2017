@@ -17,16 +17,28 @@ import no.byteme.magnuspoppe.eksamen.datamodel.Destinasjon;
 
 
 /**
- * A simple {@link Fragment} subclass.
+ * En enkel fragment for å presentere listen av nære
+ * lokasjoner. Denne listen er sortert på avstand fra
+ * enhetens posisjon, der nærmeste posisjon er først i
+ * listen. Man kan også klikke på kartet for å åpne lokasjoner
+ * på samme måte som denne listen.
  */
 public class FragmentCloseLocationList extends Fragment
 {
+    // Datasett:
     ArrayList<Destinasjon> destinasjoner;
+
+    // Adapter og listview for presentasjon:
     AdapterDestinasjoner adapter;
     ListView destinasjonslisten;
+
+    // controlleren
     ActivityCtrl aktivitet;
+
+    // Eget panel for feilmelding dersom man ikke får lastet inn datasett.
     LinearLayout feilPanel;
 
+    // Konstanter:
     public static final String SELECTED_DESTINATION = "aksjdhfalskjdfh";
 
     public FragmentCloseLocationList()
@@ -53,21 +65,28 @@ public class FragmentCloseLocationList extends Fragment
      */
     void sjekkOmTomListe()
     {
+        // Hvis ikke det er noen destinasjoner skal feilmelding vises:
         if (destinasjoner.isEmpty())
         {
+            // Forskjellige case krever forskjellige feilmelding:
             if (!aktivitet.harInternettForbindelse())
-                visOppdaterPanel(getResources().getString(R.string.list_empty));
+                visFeilmeldingsPanel(getResources().getString(R.string.list_empty));
             else
-                visOppdaterPanel(getResources().getString(R.string.empty_database));
+                visFeilmeldingsPanel(getResources().getString(R.string.empty_database));
         }
         else
         {
+            // Oppdaterer listen og skjuler feilpanel.
             feilPanel.setVisibility(View.GONE);
             destinasjonslisten.invalidate();
         }
     }
 
-    private void visOppdaterPanel(String feilmelding)
+    /**
+     * Viser fram feilmeldingspanelet
+     * @param feilmelding som skal vises
+     */
+    private void visFeilmeldingsPanel(String feilmelding)
     {
         // Finner elementer som skal vises:
         TextView feilstatusfelt = (TextView) getView().findViewById(R.id.feilstatus);
@@ -79,36 +98,55 @@ public class FragmentCloseLocationList extends Fragment
         feilstatusfelt.setText(feilmelding);
     }
 
+    /**
+     * Når en annen app går tilbake "trykker på tilbakeknappen" skal denne
+     * metoden utføres for å konfigurere panelet korrekt:
+     */
     @Override
     public void onResume()
     {
         super.onResume();
+
+        // Ordner det visuelle:
         aktivitet.skalerPanelVekting(.4f);
         aktivitet.getLeggTilKnapp().setVisibility(View.VISIBLE);
 
         // Sjekker alltid om det er uopplastede elementer som venter på å lastes opp.
         aktivitet.lastOppMidlertidigLagret();
 
+        // Sjekker om listen er tom for feilhåndtering:
         sjekkOmTomListe();
     }
 
+    /**
+     * Lager selve viewet:
+     * @param inflater  Blåser opp layout
+     * @param container Holder på view:
+     * @param savedInstanceState lagrede data
+     * @return ferdig konfigurert fragment view
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
+        // Henter kontroller
         aktivitet = (ActivityCtrl) getActivity();
 
+        // Lager views:
         View view = inflater.inflate(R.layout.fragment_close_location_list, container, false);
         feilPanel = (LinearLayout) view.findViewById(R.id.feilPanelListe);
 
+        // Henter datasett:
         destinasjoner = aktivitet.getDestinasjoner();
         destinasjonslisten = (ListView) view.findViewById(R.id.destinasjonsliste);
 
+        // Konfigurerer adapter for presentasjon av hvert listeelement:
         adapter = new AdapterDestinasjoner(
                 getActivity().getApplicationContext(),
                 destinasjoner
         );
 
+        // Konfigurerer listview:
         destinasjonslisten.setAdapter(adapter);
         destinasjonslisten.setOnItemClickListener(new AdapterView.OnItemClickListener()
         {
@@ -126,6 +164,4 @@ public class FragmentCloseLocationList extends Fragment
         // Inflate the layout for this fragment
         return view;
     }
-
-
 }
