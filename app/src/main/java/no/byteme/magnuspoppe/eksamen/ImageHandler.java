@@ -185,38 +185,50 @@ public class ImageHandler
         // PARAMS verdier:
         final static int URL = 0;
 
-        // Statuscodes:
+        // Statuskoder:
         final static long FEIL = 0l;
         final static long OK = 1l;
 
+        // Formatering av HTTP melding:
+        private final static String BOUNDRY = "*****";
+        private final static String LINE_END = "\r\n";
+        private final static String TWO_HYPHENS = "--";
 
-        Bitmap bilde = null;
-        Long respons;
+        // Bildeverdier:
         String sti, navn;
 
+        // Oppkoblingsobjekter
         HttpURLConnection conn;
         DataOutputStream stream;
-        String boundary = "*****";
-        String lineEnd = "\r\n";
-        String twoHyphens = "--";
-        int bytesRead, bytesAvailable, bufferSize;
-        int maxBufferSize = 1 * 1024 * 1024;
-        byte[] buffer;
 
+        private final static int MAX_BUFFER_SIZE = 1 * 1024 * 1024;
+
+        /**
+         * Standard setter som må utføres før "execute()" utføres.
+         * @param sti til bildefilen lokalt
+         * @param navn på bildefilen
+         */
         public void setBildeStiOgNavn(String sti, String navn)
         {
             this.sti = sti;
             this.navn = navn;
         }
 
+        /**
+         * Utfører selve oppkoblingen og overføringen. Dette gjøres med
+         * en egen tråd. Opplastingen tar imot 1 parameter, URL.
+         * @param params URL. Kun 1 parameter er støttet.
+         * @return statuskode for overføring.
+         */
         @Override
         protected Long doInBackground(String... params)
         {
+            Long respons = null;
             try {
-                // open a URL connection to the Servlet
-
-
+                // Laster inn bildet
                 FileInputStream fileInputStream = lastInnBildeFil(sti+"/"+navn);
+
+                // Lager URL
                 URL url = new URL(params[URL]);
 
                 // Open a HTTP  connection to  the URL
@@ -227,48 +239,46 @@ public class ImageHandler
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Connection", "Keep-Alive");
                 conn.setRequestProperty("ENCTYPE", "multipart/form-data");
-                conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+                conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + BOUNDRY);
                 conn.setRequestProperty("uploaded_file", navn);
 
                 stream = new DataOutputStream(conn.getOutputStream());
 
-                stream.writeBytes(twoHyphens + boundary + lineEnd);
+                stream.writeBytes(TWO_HYPHENS + BOUNDRY + LINE_END);
                 stream.writeBytes(
                         "Content-Disposition: " +
-                        "form-data; name=\"uploaded_file\";filename="+ navn + "" + lineEnd);
-                stream.writeBytes(lineEnd);
+                        "form-data; name=\"uploaded_file\";filename="+ navn + "" + LINE_END
+                );
+                stream.writeBytes(LINE_END);
 
                 // create a buffer of  maximum size
-                bytesAvailable = fileInputStream.available();
+                int bytesAvailable = fileInputStream.available();
+                int bufferSize = Math.min(bytesAvailable, MAX_BUFFER_SIZE);
+                byte[] buffer = new byte[bufferSize];
 
-                bufferSize = Math.min(bytesAvailable, maxBufferSize);
-                buffer = new byte[bufferSize];
-
-                // read file and write it into form...
-                bytesRead = fileInputStream.read(buffer, 0, bufferSize);
-
+                // Read file and write it into form...
+                int bytesRead = fileInputStream.read(buffer, 0, bufferSize);
                 while (bytesRead > 0) {
 
                     stream.write(buffer, 0, bufferSize);
                     bytesAvailable = fileInputStream.available();
-                    bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                    bufferSize = Math.min(bytesAvailable, MAX_BUFFER_SIZE);
                     bytesRead = fileInputStream.read(buffer, 0, bufferSize);
 
                 }
 
                 // send multipart form data necesssary after file data...
-                stream.writeBytes(lineEnd);
-                stream.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+                stream.writeBytes(LINE_END);
+                stream.writeBytes(TWO_HYPHENS + BOUNDRY + TWO_HYPHENS + LINE_END);
 
                 // Responses from the server (code and message)
                 int responseCode = conn.getResponseCode();
-
                 if (responseCode == HttpURLConnection.HTTP_OK)
                 {
                     respons = OK;
                 }
 
-                //close the streams
+                // Close the streams
                 fileInputStream.close();
                 stream.flush();
                 stream.close();
@@ -287,7 +297,7 @@ public class ImageHandler
             super.onPostExecute(resultat);
 
             // Utfører callback for ferdig opplasting av bilde:
-            fragment.vedKomplettOpplastingAvBilde(resultat == OK);
+            fragment.vedKomplettOpplastingAvBilde( resultat == OK );
         }
     }
 }

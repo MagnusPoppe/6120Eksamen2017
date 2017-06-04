@@ -41,35 +41,48 @@ public class MyMarker
     @Override
     public boolean equals(Object obj)
     {
-        if (obj instanceof Marker)
+        if (obj instanceof Marker) // Case at objektet sendt inn er GOOGLE Marker objekt
         {
             Marker andre = (Marker) obj;
             return tittel.equals(andre.getTitle());
         }
-        else if (obj instanceof MyMarker)
+        else if (obj instanceof MyMarker) // Case: Min egen marker type:
         {
             MyMarker andre = (MyMarker) obj;
             return tittel.equals(andre.getTittel());
         }
-        // No match:
+
+        // Ingen match:
         return false;
     }
 
+    /**
+     * @return Tittelen på objektet brukt til sammenlikning.
+     */
     public String getTittel()
     {
         return tittel;
     }
 
+    /**
+     * @param tittel på markøren som er plassert på kartet.
+     */
     public void setTittel(String tittel)
     {
         this.tittel = tittel;
     }
 
+    /**
+     * @return Destinasjonen som tilhører objektet
+     */
     public Destinasjon getDestinasjon()
     {
         return destinasjon;
     }
 
+    /**
+     * @param destinasjon som tilhører objektet.
+     */
     public void setDestinasjon(Destinasjon destinasjon)
     {
         this.destinasjon = destinasjon;

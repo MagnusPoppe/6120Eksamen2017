@@ -10,11 +10,17 @@ import android.view.View;
 import android.view.ViewGroup;
 
 /**
+ * Enkel preferences fragment brukt for å endre på brukernavn verdier.
  * Created by MagnusPoppe on 12/04/2017.
  */
 
-public class Preferences extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener
+public class Preferences extends PreferenceFragment
+        implements SharedPreferences.OnSharedPreferenceChangeListener
 {
+    /**
+     * Standard on-create metode. Denne setter på XML filen for visning.
+     * @param savedInstanceState
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState)
     {
@@ -22,23 +28,9 @@ public class Preferences extends PreferenceFragment implements SharedPreferences
         addPreferencesFromResource(R.xml.preferences);
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = super.onCreateView(inflater, container, savedInstanceState);
-
-//        SharedPreferences.OnSharedPreferenceChangeListener listener =
-//                new SharedPreferences.OnSharedPreferenceChangeListener()
-//                {
-//                    @Override
-//                    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
-//                    {
-//                        Log.d("PREFERENCES", key + " HAS CHANGED!");
-//                    }
-//                };
-//
-        return view;
-    }
-
+    /**
+     * Registrerer lytter
+     */
     @Override
     public void onResume()
     {
@@ -46,6 +38,10 @@ public class Preferences extends PreferenceFragment implements SharedPreferences
         getPreferenceScreen().getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
     }
 
+    /**
+     * Noen visuelle endringer som må gjøres for å forsikre om at denne siden har en
+     * hvit bakgrunn.
+     */
     @Override
     public void onPause()
     {
@@ -56,32 +52,26 @@ public class Preferences extends PreferenceFragment implements SharedPreferences
     }
 
     @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        ActivityCtrl aktivitet = (ActivityCtrl) getActivity();
-
-        SharedPreferences preferences =
-                aktivitet.getSharedPreferences(ActivityCtrl.INNSTILLINGER, 0);
-
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key)
+    {
+        // Lager nødvendige objekter for å utføre lagringen:
+        ActivityCtrl ctrl = (ActivityCtrl) getActivity();
+        SharedPreferences preferences = ctrl.getSharedPreferences(ActivityCtrl.INNSTILLINGER, 0);
         SharedPreferences.Editor editor = preferences.edit();
-
-        String email = sharedPreferences.getString("email", "");
 
         // Lagrer mulige endringer:
         if (key.equals("email"))
-            editor.putString("email", email);
-
+            editor.putString("email", sharedPreferences.getString("email", ""));
         if (key.equals("firstName"))
             editor.putString("firstName", sharedPreferences.getString("firstName", ""));
-
         if (key.equals("lastName"))
             editor.putString("lastName", sharedPreferences.getString("lastName", ""));
 
+        // Utfører lagringen i UI tråd. Det fungerte ikke å bruke apply() av
+        // ukjente grunner. 
         editor.commit();
 
         // Passer på at objektet for brukeren har oppdatert seg:
-        aktivitet.brukerOppsett();
-
-        // TODO: Fjern denne:
-        Log.v("Settings changed", key + " = " + sharedPreferences.getString(key, ""));
+        ctrl.brukerOppsett();
     }
 }
