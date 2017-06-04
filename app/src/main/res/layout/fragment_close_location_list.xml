@@ -1,4 +1,8 @@
-
+<!--
+    FRAGMENT: LOKASJONSLISTE
+    Dette er Listen over alle Turmål vist som første skjermbilde.
+    Dette viewet er veldig standard. hvert listview element er
+-->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
@@ -6,6 +10,10 @@
               android:orientation="vertical"
              tools:context="no.byteme.magnuspoppe.eksamen.FragmentCloseLocationList">
 
+    <!--
+    List view håndterer sin egen scrolling og er derfor plassert inni en LinearLayout.
+    Listeelementene som vises er av typen: "res/layout/list_element_close_location.xml"
+    -->
     <LinearLayout android:layout_width="match_parent"
                   android:layout_height="match_parent"
                   android:orientation="vertical">
@@ -15,6 +23,11 @@
             android:layout_height="match_parent"/>
     </LinearLayout>
 
+    <!--
+    Eget panel for å vise feilmeldinger om ikke listen kan
+    lastes inn eller om det er feil med datasettet. Denne viser
+    en enkel statusmelding og en oppdater knapp.
+    -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -32,7 +45,4 @@
             android:onClick="oppdaterEtterFeil"
             android:text="@string/update_list"/>
     </LinearLayout>
-
-
-
 </FrameLayout>

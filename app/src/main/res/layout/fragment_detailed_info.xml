@@ -1,3 +1,15 @@
+<!--
+    FRAGMENT: DETALJERT INFORMASJON
+    Den detaljerte informasjonen kan variere veldig i lengde, og er
+    dermed laget som et ScrollView. Her kan man se på detaljert
+    informasjon om et Turmål. Informasjonen som er lagret er:
+    * Navn på turmål
+    * Typen turmål
+    * Beskrivelse av turmålet
+    * M.O.H., Hvor mange meter over havet turmålet befinner seg
+    * Bilde av turmålet om det finnes.
+    * Hvem som markerete turmålet (epost adresse)
+-->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
@@ -9,11 +21,18 @@
         android:padding="@dimen/defaultPadding"
         android:orientation="vertical">
 
+        <!--
+        Overskrift, type og meter over havet. Dette er direkte kopi av
+        koden lagt inn i "res/layout/list_element_close_location.xml".
+        Dette ble gjort for å skape en konsistent opplevelse når man
+        navigerer appen.
+        -->
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
                       android:orientation="vertical"
                       android:layout_width="match_parent"
                       android:layout_height="match_parent">
 
+            <!-- Bruker tabell for å få formatet korrekt som jeg ønsker det. -->
             <TableLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -21,20 +40,22 @@
                 <TableRow>
                     <LinearLayout
                         android:orientation="vertical">
+
+                        <!-- Navn og Type i 1. kolonne: -->
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textAppearance="@android:style/TextAppearance.Material.Headline"
                             android:textSize="24sp"
-                            android:text="GYGRESTOLEN"
                             android:id="@+id/details_name"/>
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textAppearance="@android:style/TextAppearance.Material.Body1"
-                            android:text="FJELLTOPP"
                             android:id="@+id/details_type"/>
                     </LinearLayout>
+
+                    <!-- Meter over havet i 2. kolonne -->
                     <LinearLayout
                         android:orientation="vertical"
                         android:layout_gravity="center_vertical">
@@ -43,44 +64,52 @@
                             android:layout_height="wrap_content"
                             android:textAppearance="@android:style/TextAppearance.Material.Body1"
                             android:textAlignment="viewEnd"
-                            android:id="@+id/details_moh"
-                            android:text="9481m"/>
+                            android:id="@+id/details_moh"/>
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:textAppearance="@android:style/TextAppearance.Material.Body1"
                             android:textAlignment="viewEnd"
-                            android:text="M.O.H."/>
+                            android:text="@string/metersAboveSeaLevel"/>
                     </LinearLayout>
                 </TableRow>
             </TableLayout>
         </LinearLayout>
 
+        <!-- Overskrift for bilde og beskrivelse:-->
         <TextView
+            android:layout_marginTop="@dimen/defaultPadding"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="@android:style/TextAppearance.Material.Caption"/>
+            android:textAppearance="@android:style/TextAppearance.Material.Caption"
+            android:text="@string/detalj_beskrivelse_overskrift"/>
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:maxHeight="300dp"
-            android:id="@+id/detalj_bilde"
-            android:elevation="@dimen/foregroundElevation"
-            android:adjustViewBounds="true"
-            android:cropToPadding="false"
-            android:scaleType="centerInside"
-            />
-
+        <!-- Beskrivelsen av turmålet: -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:textAppearance="@android:style/TextAppearance.Material.Body1"
             android:id="@+id/detalj_beskrivelse"/>
 
+        <!-- Bildet av turmålet: -->
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxHeight="300dp"
+            android:id="@+id/detalj_bilde"
+            android:layout_marginTop="@dimen/defaultPadding"
+            android:elevation="@dimen/foregroundElevation"
+            android:adjustViewBounds="true"
+            android:cropToPadding="false"
+            android:scaleType="centerInside"
+            />
+
+        <!-- Liten tekst, Markert av: ...(eier) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/defaultPadding"
+            android:gravity="center"
             android:orientation="horizontal">
             <TextView
                 android:layout_width="wrap_content"
@@ -93,10 +122,5 @@
                 android:textAppearance="@android:style/TextAppearance.Material.Body1"
                 android:id="@+id/detalj_eier"/>
         </LinearLayout>
-
-
-
     </LinearLayout>
-
-
 </ScrollView>

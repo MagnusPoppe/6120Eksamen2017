@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    KONTROLLER LAYOUT:
+    Kontrolleren styrer hvordan hvert av fragmentene skal plasseres
+    på skjermen. Denne layouten endrer dynamisk hvordan de forskjellige
+    fragmentene plasseres ut og styrer hvordan dette skal se ut for
+    alle skjermtyper. Man trenger dermed ikke å spesialtilpasse hvert
+    fragment for forskjellige skjermstørrelser.
+-->
+
 <android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -14,6 +24,21 @@
         android:layout_height="?attr/actionBarSize"
         android:background="@color/colorPrimary"
         android:elevation="4dp"/>
+
+    <!--
+    Hovedlayout. Denne holder på alle fragmenter.
+    Dette er satt som linear layout fordi jeg vil bruke
+    layout_weight attributten til å bestemme størrelsen brukt
+    opp av de forskjellige.
+
+    For det grafiske i denne appen blir alle fragmenter styrt av
+    FragmentManager. Hver gang et fragment blir vist, blir det
+    byttet ut gjennom metoden FragmentTransaction.replace().
+    Denne metoden bytter ut alt av innhold i et Layout med
+    nytt innhold. Jeg kan dermed bruke kun "ListFragmentHolder"
+    for bruk av all visning.
+    -->
+
     <LinearLayout
         android:layout_marginTop="?attr/actionBarSize"
         android:layout_width="match_parent"
@@ -23,6 +48,8 @@
         android:id="@+id/mainFragmentContainer"
         android:background="@android:color/background_light"
         >
+
+        <!-- ListFragmentHolder: -->
         <LinearLayout
             android:layout_width="@dimen/flat"
             android:layout_height="match_parent"
@@ -30,6 +57,7 @@
             android:orientation="vertical"
             android:id="@+id/ListeFragmentHolder"/>
 
+        <!-- Kartfragmentet, alltid til stede: -->
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="@dimen/flat"
@@ -37,10 +65,18 @@
             android:layout_weight="@dimen/XLlargePanel"
             android:id="@+id/kartFragmentHolder"/>
     </LinearLayout>
+
+    <!--
+    RelativeLayout for å plassere to ting.
+    1. FAB knapp for å ha "legg til" funksjonen. Denne krever relative
+       layout fordi den skal ligge flytende over bildet.
+    2. Hele settingsvinduet som må ha hvit bakgrunn og dermed krever egen linear layout.
+    -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <!-- Innstillingsfragment plasseres inni denne: -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"

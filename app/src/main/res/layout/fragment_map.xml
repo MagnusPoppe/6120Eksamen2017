@@ -1,13 +1,27 @@
+<!--
+    FRAGMENT: KART
+    Dette fragmentet er kun en holder for Googles kartfragment:
+    "com.google.android.gms.maps.MapFragment". Fragmentet er
+    mest til for å bygge ekstra funksjonalitet over kartet.
+    LES MER i "FragmentMap.java"
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
              tools:context="no.byteme.magnuspoppe.eksamen.FragmentMap">
-       <fragment
-           android:id="@+id/map"
-           android:layout_width="match_parent"
-           android:layout_height="match_parent"
-           android:elevation="@dimen/backgroundElevation"
-           android:background="#ffffff"
-           class="com.google.android.gms.maps.MapFragment"/>
+
+    <!--
+    Kartet. Dette er det eneste hardkodete fragmentet i hele
+    applikasjonen. Dette fragmentet kan ikke erstattes med
+    FragmentTransaction.replace().
+    -->
+    <fragment
+       android:id="@+id/map"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent"
+       android:elevation="@dimen/backgroundElevation"
+       android:background="#ffffff"
+       class="com.google.android.gms.maps.MapFragment"/>
+
 </LinearLayout>

@@ -21,6 +21,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 
@@ -159,9 +161,10 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
         View view = inflater.inflate(R.layout.fragment_add_location, container, false);
 
         // Henter "Textviews" for forhåndsdefinert data:
-        TextView innLat = (TextView) view.findViewById(R.id.legg_til_lat);
-        TextView innLng = (TextView) view.findViewById(R.id.legg_til_lng);
-        TextView innMoh = (TextView) view.findViewById(R.id.legg_til_moh);
+        TextView innLat  = (TextView) view.findViewById(R.id.legg_til_lat);
+        TextView innLng  = (TextView) view.findViewById(R.id.legg_til_lng);
+        TextView innMoh  = (TextView) view.findViewById(R.id.legg_til_moh);
+        TextView innEier = (TextView) view.findViewById(R.id.legg_til_eier);
 
         // Henter "TextInputEditText"
         innNavn         = (TextInputEditText) view.findViewById(R.id.inndataNavn);
@@ -232,7 +235,8 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
                 aktivitet.getSharedPreferences(ActivityCtrl.INNSTILLINGER, MODE_PRIVATE);
         denneDestinasjonen.setEier(innstillinger.getString("email", ""));
 
-        // Setter tekstfelter med lokasjonsdata:
+        // Setter tekstfelter med lokasjonsdata og eier:
+        innEier.setText(denneDestinasjonen.getEier());
         innLat.setText(denneDestinasjonen.getKoordinat().latitude+"");
         innLng.setText(denneDestinasjonen.getKoordinat().longitude+"");
         innMoh.setText(denneDestinasjonen.getMoh() + " " + getResources().getString(R.string.metersAboveSeaLevel));

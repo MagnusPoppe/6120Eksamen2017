@@ -314,7 +314,6 @@ public class ActivityCtrl extends Activity
         transaksjon.replace(R.id.ListeFragmentHolder, detaljinfo);
         transaksjon.addToBackStack(null);
 
-
         // Legger ved hvilken destinasjon som ble valgt.
         Bundle argumenter = new Bundle();
         argumenter.putInt(UTVALGT, indeksDestinasjon);

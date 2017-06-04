@@ -6,7 +6,7 @@
     <string name="imageError">Det skjedde en feil da bildet ble lastet inn.</string>
 
     <!-- Diverse strenger brukt for forklaring av tekst -->
-    <string name="markedBy">Markert av:</string>
+    <string name="markedBy">Markert av: </string>
     <string name="metersAboveSeaLevel">M.O.H.</string>
     <string name="perimissionDialog">Åpne tillateses dialog</string>
 
@@ -14,4 +14,8 @@
     <string name="update_list">Oppdater Liste</string>
     <string name="empty_database">En ukjent feil har untruffet.</string>
     <string name="list_empty">Ingen internett forbindelse.</string>
+    <string name="detalj_beskrivelse_overskrift">Beskrivelse</string>
+    <string name="gå_til_posisjon">Gå til min posisjon</string>
+    <string name="sync">Synkroniser</string>
+    <string name="innstillinger">Innstillinger</string>
 </resources>
