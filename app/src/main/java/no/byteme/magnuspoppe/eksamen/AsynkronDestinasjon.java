@@ -271,10 +271,16 @@ public class AsynkronDestinasjon
 
         /**
          * Lager objekter ut av de mottatte dataene. Dataene blir også sortert.
-         * Jeg har valgt å gjøre dette i bakgrunn grunnet at det er en tung prosess som
-         * ikke er ønsket på UI tråden.
+         * Jeg har valgt å gjøre dette i bakgrunn grunnet at det er en tung prosess
+         * som ikke er ønsket på UI tråden.
          *
-         * @param json data gotten from the traffic branch.
+         * Som kommentar til obligatorisk innlevering 2 fikk jeg beskjed om at denne
+         * typen tolkingsmetode hører hjemme i Modellklassen (som i dette tilfellet
+         * skulle vært Destinasjon). Dette mener jeg er motsatt. At selve analysen
+         * av strengen burde gjøres her, mens lagringen av hvert objekt gjøres med
+         * konstruktør.
+         *
+         * @param json data hentet ut av nettverkskallet.
          * @throws JSONException
          */
         private void analyserData(String json) throws JSONException
@@ -286,9 +292,7 @@ public class AsynkronDestinasjon
             ArrayList<Destinasjon> destinasjoner = new ArrayList<>();
 
             for (int i = 0; i < tabell.length(); i++)
-            {
                 destinasjoner.add(new Destinasjon( (JSONObject) tabell.get(i)));
-            }
 
             // Setter på og sorterer:
             aktivitet.setDestinasjoner(destinasjoner);

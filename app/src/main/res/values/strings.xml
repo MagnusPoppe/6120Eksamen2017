@@ -1,21 +1,38 @@
 <resources>
+    <!--
+        Alle strengressurser.
+       Jeg har forsøkt å være flink med å legge alle "løse" strenger inn
+       her. Det kan hende noen mangler. Meningen var å ha alle strenger
+       her.
+    -->
     <string name="app_name">Turmål - Eksamen 2017</string>
 
     <!-- Feilmeldinger: -->
     <string name="error">Noe gikk galt!</string>
     <string name="imageError">Det skjedde en feil da bildet ble lastet inn.</string>
+    <string name="ingenlokasjon">\"Lokasjon ikke enda funnet.\"</string>
+    <string name="empty_database">En ukjent feil har untruffet.</string>
+    <string name="list_empty">Ingen internett forbindelse.</string>
+    <string name="epostfeil">\"Feil format på E-Post.\"</string>
+    <string name="oppkoblingsfeilGoogle">\"Klarte ikke å koble til Google Play Services\"</string>
+    <string name="brukerKontoFeil">Brukerkonto feil!</string>
 
     <!-- Diverse strenger brukt for forklaring av tekst -->
     <string name="markedBy">Markert av: </string>
     <string name="metersAboveSeaLevel">M.O.H.</string>
     <string name="perimissionDialog">Åpne tillateses dialog</string>
-
-    <!-- Errorstrenger: -->
-    <string name="update_list">Oppdater Liste</string>
-    <string name="empty_database">En ukjent feil har untruffet.</string>
-    <string name="list_empty">Ingen internett forbindelse.</string>
     <string name="detalj_beskrivelse_overskrift">Beskrivelse</string>
+    <string name="publisert">\"Turmål er publisert til tjener!\"</string>
+    <string name="ikkeRegistrert">\"Ingen registrert bruker.\"</string>
+    <string name="manglerTillatelsePos">Kan ikke vise posisjon uten tillatelse</string>
+    <string name="lastOppSenere">Ingen nettilgang. Turmål blir lastet opp senere.</string>
+
+    <!-- Knappenavn: -->
     <string name="gå_til_posisjon">Gå til min posisjon</string>
     <string name="sync">Synkroniser</string>
     <string name="innstillinger">Innstillinger</string>
+    <string name="update_list">Oppdater Liste</string>
+    <string name="registrer">REGISTRER</string>
+    <string name="rettOppIFeil">Rett opp i feil</string>
+
 </resources>

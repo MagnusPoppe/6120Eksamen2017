@@ -353,7 +353,11 @@ public class ActivityCtrl extends Activity
     {
         if (lokasjon == null)
         {
-            Snackbar.make(this.getCurrentFocus(), "Lokasjon ikke enda funnet.", Snackbar.LENGTH_SHORT).show();
+            Snackbar.make(
+                    this.getCurrentFocus(),
+                    getResources().getString(R.string.ingenlokasjon),
+                    Snackbar.LENGTH_SHORT
+            ).show();
             return;
         }
 
@@ -486,7 +490,7 @@ public class ActivityCtrl extends Activity
 
         // Informer bruker:
         if( getCurrentFocus()!=null)
-            Snackbar.make(getCurrentFocus(), "Turmål er publisert til tjener!",
+            Snackbar.make(getCurrentFocus(), getResources().getString(R.string.publisert),
                     Snackbar.LENGTH_SHORT).show();
 
         // Oppdaterer datasettet med nye oppføringer.
@@ -520,7 +524,7 @@ public class ActivityCtrl extends Activity
     {
         if (enhetensPosisjon != null)
             return enhetensPosisjon;
-        else
+        else // Hvis feil, gjør default.
             return HOYSKOLEN;
     }
 
@@ -544,11 +548,11 @@ public class ActivityCtrl extends Activity
      */
     public void leggTilDestinasjon(Destinasjon destinasjon)
     {
+        // Løper igjennom alle destinasjoner for å finne korrekt plassering:
         for (int i = 0; i < destinasjoner.size(); i++)
         {
             Destinasjon andre = destinasjoner.get(i);
-
-            if (destinasjon.compareTo(andre) < 0)
+            if (destinasjon.compareTo(andre) < 0) // Når posisjon er funnet
             {
                 destinasjoner.add(i, destinasjon);
                 return;
@@ -562,11 +566,7 @@ public class ActivityCtrl extends Activity
      */
     public void setDestinasjoner(ArrayList<Destinasjon> destinasjoner)
     {
-        // Rydder vekk alle markører på kartet:
-        // if (kart != null)
-        //     kart.fjernAlleMarkorer();
-
-        // Setter og sorterer ny tabell:
+       // Setter og sorterer ny tabell:
         this.destinasjoner = destinasjoner;
         sorterDestinasjoner();
     }
@@ -651,8 +651,10 @@ public class ActivityCtrl extends Activity
         // For å legge til ny bruker må man ha brukerkonto registrert:
         if (bruker == null)
         {
-            Snackbar.make(view, "Ingen registrert bruker.", Snackbar.LENGTH_INDEFINITE)
-                    .setAction("REGISTRER", new View.OnClickListener()
+            Snackbar.make(view, getResources().getString(R.string.ikkeRegistrert),
+                    Snackbar.LENGTH_INDEFINITE)
+                    .setAction(getResources().getString(R.string.registrer),
+                    new View.OnClickListener()
                     {
                         @Override
                         public void onClick(View v)
@@ -665,8 +667,10 @@ public class ActivityCtrl extends Activity
         // Epost adresse må være korrekt formatert:
         if (! bruker.harKorrektEpost())
         {
-            Snackbar.make(view, "Feil format på E-Post.", Snackbar.LENGTH_INDEFINITE)
-                    .setAction("REGISTRER", new View.OnClickListener()
+            Snackbar.make(view, getResources().getString(R.string.epostfeil),
+                    Snackbar.LENGTH_INDEFINITE)
+                    .setAction(getResources().getString(R.string.registrer),
+                    new View.OnClickListener()
                     {
                         @Override
                         public void onClick(View v)
@@ -899,8 +903,11 @@ public class ActivityCtrl extends Activity
         // An unresolvable error has occurred and a connection to Google APIs
         // could not be established. Display an error message, or handle the failure silently
         if (getCurrentFocus() != null)
-            Snackbar.make(getCurrentFocus(),
-                    "Klarte ikke å koble til Google Play Services", Snackbar.LENGTH_LONG).show();
+            Snackbar.make(
+                    getCurrentFocus(),
+                    getResources().getString(R.string.oppkoblingsfeilGoogle),
+                    Snackbar.LENGTH_LONG
+            ).show();
     }
 
     /**
@@ -930,7 +937,8 @@ public class ActivityCtrl extends Activity
             } else {
                 // Permission was denied or request was cancelled
                 Snackbar.make(getCurrentFocus(),
-                        "Kan ikke vise posisjon uten tillatelse", Snackbar.LENGTH_LONG).show();
+                        getResources().getString(R.string.manglerTillatelsePos),
+                        Snackbar.LENGTH_LONG).show();
             }
         }
     }

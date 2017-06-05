@@ -360,8 +360,8 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
         // Kontrollerer at brukerkonto er satt.
         if (denneDestinasjonen.getEier().equals("") && denneDestinasjonen.getEier() != null)
         {
-            Snackbar.make(getView(), "Brukerkonto feil!", Snackbar.LENGTH_INDEFINITE)
-                    .setAction("RETT OPP I FEIL", new View.OnClickListener()
+            Snackbar.make(getView(), getResources().getString(R.string.brukerKontoFeil), Snackbar.LENGTH_INDEFINITE)
+                    .setAction(getResources().getString(R.string.rettOppIFeil), new View.OnClickListener()
                     {
                         @Override
                         public void onClick(View v)
@@ -381,7 +381,7 @@ public class FragmentAddLocation extends Fragment implements mellomLagerBildeKon
         }
         else // Hvis det ikke er internett mellomlagrer appen lokasjonen:
         {
-            Snackbar.make(getView(), "Ingen nettilgang. Turmål blir lastet opp senere.",
+            Snackbar.make(getView(), getResources().getString(R.string.lastOppSenere),
                     Snackbar.LENGTH_LONG).show();
             denneDestinasjonen.setiGlobalDatabase(false);
             lagreLokalt(denneDestinasjonen);

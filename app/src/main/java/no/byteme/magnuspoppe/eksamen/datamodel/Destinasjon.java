@@ -202,6 +202,12 @@ public class Destinasjon implements Comparable, Parcelable
      * Lager en streng med JSON notasjon versjon av objektet. Dette
      * skal brukes med database håndtering.
      *
+     * Jeg fikk beskjed i obligatorisk innlevering å lage en
+     * "char fnutt = '"';" istedenfor å bruke "escape" tegn.
+     * Jeg mener dette er en feil, siden sammenslåing av streng
+     * er tyngre enn å bruke "escape" tegn i enkelte språk, og
+     * jeg personlig mener dette er mer ryddig, pent og lesbart.
+     *
      * @return JSON formatert objekt.
      */
     public String toJSON()

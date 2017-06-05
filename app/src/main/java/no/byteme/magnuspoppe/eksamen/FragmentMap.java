@@ -99,7 +99,7 @@ public class FragmentMap extends Fragment implements OnMapReadyCallback
         {
             Snackbar.make(
                     getView(),
-                    "Har ikke tillatelse til å bruke lokasjon.",
+                    getResources().getString(R.string.manglerTillatelsePos),
                     Snackbar.LENGTH_SHORT
             ).show();
         }
