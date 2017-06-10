@@ -132,10 +132,10 @@ Google maps api: Jeg har brukt veldig mange av undersidene her. De fleste har bl
 https://developers.google.com/maps/documentation/android-api/
 
 Metode for å sjekke om applikasjonen kjører på nettbrett:
-https://stackoverflow.com/questions/5015094/how-to-determine-device-screen-size-category-small- normal-large-xlarge-usin/19256468#19256468
+https://stackoverflow.com/questions/5015094/how-to-determine-device-screen-size-category-small-normal-large-xlarge-usin/19256468#19256468
 
 Mønster for lagring av bilder:
-https://stackoverflow.com/questions/17674634/saving-and-reading-bitmaps-images-from-internal- memory-in-android
+https://stackoverflow.com/questions/17674634/saving-and-reading-bitmaps-images-from-internal-memory-in-android
 
 Metode for lagring av bilder over nett og PHP skript for mottak av bilder på tjener:
 https://stackoverflow.com/questions/23921356/android-upload-image-to-php-server
