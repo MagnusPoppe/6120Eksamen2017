@@ -54,13 +54,13 @@ databasen.
 
 __For uthenting av turmål (Bruker HTTP GET):__
 ```
-http://itfag.usn.no/~210852/api.php/destination/                  // Gir alle
-http://itfag.usn.no/~210852/api.php/destination/<heltall>         // Gir den med oppgitt ID
-http://itfag.usn.no/~210852/api.php/destination/<brukernavn>      // Gir alle for en bruker
+http://itfag.usn.no/~210852/api.php/destination/              // Gir alle
+http://itfag.usn.no/~210852/api.php/destination/<heltall>     // Gir den med oppgitt ID
+http://itfag.usn.no/~210852/api.php/destination/<brukernavn>  // Gir alle for en bruker
 ```
 __For å sette inn i database (Bruke HTTP POST):__
 ```
-http://itfag.usn.no/~210852/api.php/destination/ // Med jsonformatert objekt av data.
+http://itfag.usn.no/~210852/api.php/destination/              // Med jsonformatert objekt av data.
 ```
 
 ## DE FORSKJELLIGE FRAGMENTENE
